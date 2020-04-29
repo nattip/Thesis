@@ -9,7 +9,7 @@
 #
 # Last updated: April 14, 2020
 
-#   import packages
+# import packages
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
@@ -23,30 +23,80 @@ import multiprocessing
 # constants
 fs = 1200
 t_tot = np.arange(0, 30, 1 / fs)
-filepath = "/Users/natalietipton/Code/Data/SB01/SB01Trial_07.csv"
+filepath = "/Users/natalietipton/Code/Data/SB01/SB01Trial_19.csv"
 
-# reads data in from .csv files
+# reads data in from .csv files for data with feet together, one force plate
+# returns: cx = CoP x position (AP), cy = CoP y position (ML)
 # user specifies:
 #   header = which row the data starts on (starting at 0, not 1 like the sheet)
 #   usecols = names of the column headers that are to be included
 #   nrows = number of data points to be read in
 #   rows_skip = the number of any rows to not be included (starting at 0)
-def read_data(filepath, row_start, cols, num_data, rows_skip):
+def read_data_onefp(filepath, row_start, cols, num_data, rows_skip):
     data = pd.read_csv(
         filepath,
         header=row_start,
         usecols=cols,
         nrows=num_data,
-        dtype={"Cx": np.float64, "Cy": np.float64, "Cz": np.float64},
+        dtype={"Cx": np.float64, "Cy": np.float64},
         skiprows=rows_skip,
     )
 
     # convert data frame into lists
     cx = data["Cx"].values.tolist()
     cy = data["Cy"].values.tolist()
-    cz = data["Cz"].values.tolist()
 
-    return cx, cy, cz
+    return cx, cy
+
+
+# reads data in from .csv files for feet tandem, two force plates
+# combines CoP positions from both force plates into 1 resultant CoP
+# returns: cx = CoP x position (AP), cy = CoP y position (ML)
+# user specifies:
+#   header = which row the data starts on (starting at 0, not 1 like the sheet)
+#   usecols = names of the column headers that are to be included
+#   nrows = number of data points to be read in
+#   rows_skip = the number of any rows to not be included (starting at 0)
+def read_data_twofp(filepath, row_start, cols, num_data, rows_skip):
+    data = pd.read_csv(
+        filepath,
+        header=row_start,
+        usecols=["Fz", "Cx", "Cy", "Fz.1", "Cx.1", "Cy.1"],
+        nrows=36000,
+        dtype={
+            "Fz": np.float64,
+            "Cx": np.float64,
+            "Cy": np.float64,
+            "Fz.1": np.float64,
+            "Cx.1": np.float64,
+            "Cy.1": np.float64,
+        },
+        skiprows=[4],
+    )
+
+    # convert data frame into lists
+    fz = data["Fz"].values.tolist()
+    cx = data["Cx"].values.tolist()
+    cy = data["Cy"].values.tolist()
+    fz_1 = data["Fz.1"].values.tolist()
+    cx_1 = data["Cx.1"].values.tolist()
+    cy_1 = data["Cy.1"].values.tolist()
+
+    cx_combined = []
+    cy_combined = []
+
+    for point in range(len(cx)):
+        cx_combined.append(
+            cx[point] * fz[point] / (fz[point] + fz_1[point])
+            + cx_1[point] * fz_1[point] / (fz[point] + fz_1[point])
+        )
+
+        cy_combined.append(
+            cy[point] * fz[point] / (fz[point] + fz_1[point])
+            + cy_1[point] * fz_1[point] / (fz[point] + fz_1[point])
+        )
+
+    return cx_combined, cy_combined
 
 
 # standardizes the data given using the equation:
@@ -83,8 +133,6 @@ def plot(x, y, xlabel, ylabel, title, xlim, ylim):
 
 
 def ApEn(U, m, r) -> float:
-    # print(U, m, r)
-
     def _maxdist(x_i, x_j):
         return max([abs(ua - va) for ua, va in zip(x_i, x_j)])
 
@@ -94,7 +142,7 @@ def ApEn(U, m, r) -> float:
             len([1 for x_j in x if _maxdist(x_i, x_j) <= r]) / (N - m + 1.0)
             for x_i in x
         ]
-        # print(x, C)
+
         return (N - m + 1.0) ** (-1) * sum(np.log(C))
 
     N = len(U)
@@ -102,9 +150,15 @@ def ApEn(U, m, r) -> float:
     return abs(_phi(m + 1) - _phi(m))
 
 
+#####################################################################################
+
 if __name__ == "__main__":
 
-    cx, cy, cz = read_data(filepath, 3, ["Cx", "Cy", "Cz"], 36000, [4])
+    # cx, cy = read_data_onefp(filepath, 3, ["Cx", "Cy"], 36000, [4])
+    cx, cy = read_data_twofp(
+        filepath, 3, ["Fz", "Cx", "Cy", "Fz.1", "Cx.1", "Cy.1"], 36000, [4]
+    )
+
     n_data = len(cx)
 
     t_corr = np.arange(-n_data / fs, n_data / fs - 1 / fs, 1 / fs)
@@ -187,6 +241,58 @@ if __name__ == "__main__":
         "Window",
         "Approximate Entropy",
         "Moving approximate entropy of Cx",
+        None,
+        None,
+    )
+
+    plot(t_tot, cy, "time (s)", "CoP", "Raw Cy signal", None, None)
+
+    auto = np.correlate(cy_standard, cy_standard, mode="full")
+
+    plot(
+        t_corr,
+        auto,
+        "time (s)",
+        "autocorrelation",
+        "Autocorrelation of Cy",
+        [0, 30],
+        None,
+    )
+
+    n_auto = len(auto)
+    freq = np.arange(0, fs, fs / n_auto)
+
+    # create windows
+    # rect_win = np.ones(n_auto)
+    # ham_win = np.hamming(n_auto)
+
+    # calculate PSD with both windows
+    Syy = np.fft.fft(auto)
+    # Sxx_ham = np.fft.fft(np.multiply(auto, ham_win))
+    plot(freq, abs(Syy), "frequency (Hz)", "autopower", "Cy Autopower", [0, 1], None)
+
+    cy_array = np.asarray(cy)
+    cy_overlap = skimage.util.view_as_windows(cy_array, 1800, step=900)
+
+    print(cy_overlap.shape)
+    rows = cy_overlap.shape[0]
+
+    approx_entropy = []
+
+    # for row in tqdm(range(0, rows)):
+    Parallel(n_jobs=multiprocessing.cpu_count(), require="sharedmem")(
+        delayed(collect_approx_entropy)(ApEn(cy_overlap[row], 2, 10))
+        for row in tqdm(range(0, rows))
+    )
+
+    entropy_windows = np.arange(0, rows)
+
+    plot(
+        entropy_windows,
+        approx_entropy,
+        "Window",
+        "Approximate Entropy",
+        "Moving approximate entropy of Cy",
         None,
         None,
     )
