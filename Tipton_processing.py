@@ -7,7 +7,7 @@
 #   during stability testing in neuronormative
 #   subjects for thesis research.
 #
-# Last updated: April 14, 2020
+# Last updated: April 28, 2020
 
 # import packages
 import matplotlib.pyplot as plt

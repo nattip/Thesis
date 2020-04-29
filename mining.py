@@ -1,3 +1,13 @@
+# Written by: Natalie Tipton
+# Advisor: Dr. Samhita Rhodes
+#
+# Created on: April 28, 2020
+#
+# Description: Data Mining script to determine
+#   how many files are missing CoM data
+#
+# Last updated: April 28, 2020
+
 import pandas as pd
 import os
 import pickle

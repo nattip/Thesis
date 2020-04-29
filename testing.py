@@ -133,19 +133,6 @@ fz_1 = data["Fz.1"].values.tolist()
 cx_1 = data["Cx.1"].values.tolist()
 cy_1 = data["Cy.1"].values.tolist()
 
-cx_combined = []
-cy_combined = []
-
-for point in range(len(cx)):
-    cx_combined.append(
-        cx[point] * fz[point] / (fz[point] + fz_1[point])
-        + cx_1[point] * fz_1[point] / (fz[point] + fz_1[point])
-    )
-
-    cy_combined.append(
-        cy[point] * fz[point] / (fz[point] + fz_1[point])
-        + cy_1[point] * fz_1[point] / (fz[point] + fz_1[point])
-    )
 
 print(cx_combined[0])
 print(cy_combined[0])
