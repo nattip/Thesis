@@ -1,7 +1,7 @@
 # Written by: Natalie Tipton
 # Advisor: Dr. Samhita Rhodes
 #
-# Created on: February 22, 2020
+# Created on: February 22, 2020g
 #
 # Description: Signal Processing of COM and COP
 #   during stability testing in neuronormative
@@ -21,9 +21,11 @@ from joblib import Parallel, delayed
 import multiprocessing
 
 # constants
-fs = 1200
-t_tot = np.arange(0, 30, 1 / fs)
-filepath = "/Users/natalietipton/Code/Data/SB01/SB01Trial_09.csv"
+fs_cop = 1200
+t_cop = np.arange(0, 30, 1 / fs_cop)
+fs_com = 120
+t_com = np.arange(0, 30, 1 / fs_com)
+filepath = "/Users/natalietipton/Code/Data/SB01/SB01Trial_19.csv"
 
 # reads data in from .csv files for data with feet together, one force plate
 # returns: cx = CoP x position (AP), cy = CoP y position (ML)
@@ -47,6 +49,24 @@ def read_data_onefp(filepath, row_start, cols, num_data, rows_skip):
     cy = data["Cy"].values.tolist()
 
     return cx, cy
+
+
+def read_data_com(filepath, row_start, cols, num_data, rows_skip):
+    data = pd.read_csv(
+        filepath,
+        header=row_start,
+        usecols=cols,
+        nrows=num_data,
+        dtype={"Cx": np.float64, "Cy": np.float64},
+        skiprows=rows_skip,
+    )
+
+    # convert data frame into lists
+    x = data["X"].values.tolist()
+    y = data["Y"].values.tolist()
+    z = data["Z"].values.tolist()
+
+    return x, y, z
 
 
 # reads data in from .csv files for feet tandem, two force plates
@@ -150,30 +170,42 @@ def ApEn(U, m, r) -> float:
     return abs(_phi(m + 1) - _phi(m))
 
 
+def collect_approx_entropy(x):
+    approx_entropy.append(x)
+
+
 #####################################################################################
 
 if __name__ == "__main__":
 
-    # cx, cy = read_data_onefp(filepath, 3, ["Cx", "Cy"], 36000, [4])
-    cx, cy = read_data_twofp(
+    # x_cop, y_cop = read_data_onefp(filepath, 3, ["Cx", "Cy"], 36000, [4])
+    x_com, y_com, z_com = read_data_com(filepath, 36009, ["X", "Y", "Z"], 3600, [36010])
+    x_cop, y_cop = read_data_twofp(
         filepath, 3, ["Fz", "Cx", "Cy", "Fz.1", "Cx.1", "Cy.1"], 36000, [4]
     )
 
-    n_data = len(cx)
+    n_cop = len(x_cop)
+    n_com = len(x_com)
 
-    t_corr = np.arange(-n_data / fs, n_data / fs - 1 / fs, 1 / fs)
+    t_corr_cop = np.arange(-n_cop / fs_cop, n_cop / fs_cop - 1 / fs_cop, 1 / fs_cop)
+    t_corr_com = np.arange(-n_com / fs_com, n_com / fs_com - 1 / fs_com, 1 / fs_com)
 
-    cx_standard = standardize(cx)
-    cy_standard = standardize(cy)
+    x_cop_standard = standardize(x_cop)
+    y_cop_standard = standardize(y_cop)
+    x_com_standard = standardize(x_com)
+    y_com_standard = standardize(y_com)
+    z_com_standard = standardize(z_com)
 
-    plot(t_tot, cx, "time (s)", "CoP", "Raw Cx signal", None, None)
+    #################### CoP X-axis analysis ####################
 
-    auto = np.correlate(cx_standard, cx_standard, mode="full")
-    cross = np.correlate(cx_standard, cy_standard, mode="full")
+    plot(t_cop, x_cop, "time (s)", "CoP", "Raw Cx signal", None, None)
+
+    auto_x_cop = np.correlate(x_cop_standard, x_cop_standard, mode="full")
+    cross_xy_cop = np.correlate(x_cop_standard, y_cop_standard, mode="full")
 
     plot(
-        t_corr,
-        auto,
+        t_corr_cop,
+        auto_x_cop,
         "time (s)",
         "autocorrelation",
         "Autocorrelation of Cx",
@@ -182,8 +214,8 @@ if __name__ == "__main__":
     )
 
     plot(
-        t_corr,
-        cross,
+        t_corr_cop,
+        cross_xy_cop,
         "time (s)",
         "cross correlation",
         "Cx and Cy cross correlation",
@@ -191,24 +223,32 @@ if __name__ == "__main__":
         None,
     )
 
-    n_auto = len(auto)
-    freq = np.arange(0, fs, fs / n_auto)
+    n_auto_cop = len(auto_x_cop)
+    freq_cop = np.arange(0, fs_cop, fs_cop / n_auto_cop)
 
     # create windows
     # rect_win = np.ones(n_auto)
     # ham_win = np.hamming(n_auto)
 
     # calculate PSD with both windows
-    Sxx = np.fft.fft(auto)
+    Sxx_cop = np.fft.fft(auto_x_cop)
     # Sxx_ham = np.fft.fft(np.multiply(auto, ham_win))
-    plot(freq, abs(Sxx), "frequency (Hz)", "autopower", "Cx Autopower", [0, 1], None)
+    plot(
+        freq_cop,
+        abs(Sxx_cop),
+        "Frequency (Hz)",
+        "autopower",
+        "Cx Autopower",
+        [0, 1],
+        None,
+    )
 
-    Sxy = np.fft.fft(cross)
+    Sxy_cop = np.fft.fft(cross_xy_cop)
     # Sxy_ham = np.fft.fft(np.multiply(cross, ham_win))
 
     plot(
-        freq,
-        abs(Sxy),
+        freq_cop,
+        abs(Sxy_cop),
         "frequency (Hz)",
         "cross power",
         "Cross Power between Cx and Cy",
@@ -216,42 +256,41 @@ if __name__ == "__main__":
         None,
     )
 
-    cx_array = np.asarray(cx)
-    cx_overlap = skimage.util.view_as_windows(cx_array, 1800, step=900)
+    # Entropy Stuff
+    # x_cop_array = np.asarray(x_cop)
+    # x_cop_overlap = skimage.util.view_as_windows(x_cop_array, 1800, step=900)
 
-    print(cx_overlap.shape)
-    rows = cx_overlap.shape[0]
+    # rows = x_cop_overlap.shape[0]
 
-    approx_entropy = []
+    # approx_entropy = []
 
-    def collect_approx_entropy(x):
-        approx_entropy.append(x)
+    # # for row in tqdm(range(0, rows)):
+    # Parallel(n_jobs=multiprocessing.cpu_count(), require="sharedmem")(
+    #     delayed(collect_approx_entropy)(ApEn(x_cop_overlap[row], 2, 10))
+    #     for row in tqdm(range(0, rows))
+    # )
 
-    # for row in tqdm(range(0, rows)):
-    Parallel(n_jobs=multiprocessing.cpu_count(), require="sharedmem")(
-        delayed(collect_approx_entropy)(ApEn(cx_overlap[row], 2, 10))
-        for row in tqdm(range(0, rows))
-    )
+    # entropy_windows = np.arange(0, rows)
 
-    entropy_windows = np.arange(0, rows)
+    # plot(
+    #     entropy_windows,
+    #     approx_entropy,
+    #     "Window",
+    #     "Approximate Entropy",
+    #     "Moving approximate entropy of Cx",
+    #     None,
+    #     None,
+    # )
+
+    #################### CoP Y-axis analysis ####################
+
+    plot(t_cop, y_cop, "time (s)", "CoP", "Raw Cy signal", None, None)
+
+    auto_y_cop = np.correlate(y_cop_standard, y_cop_standard, mode="full")
 
     plot(
-        entropy_windows,
-        approx_entropy,
-        "Window",
-        "Approximate Entropy",
-        "Moving approximate entropy of Cx",
-        None,
-        None,
-    )
-
-    plot(t_tot, cy, "time (s)", "CoP", "Raw Cy signal", None, None)
-
-    auto = np.correlate(cy_standard, cy_standard, mode="full")
-
-    plot(
-        t_corr,
-        auto,
+        t_corr_cop,
+        auto_y_cop,
         "time (s)",
         "autocorrelation",
         "Autocorrelation of Cy",
@@ -259,29 +298,125 @@ if __name__ == "__main__":
         None,
     )
 
-    n_auto = len(auto)
-    freq = np.arange(0, fs, fs / n_auto)
+    # create windows
+    # rect_win = np.ones(n_auto)
+    # ham_win = np.hamming(n_auto)
+
+    # calculate PSD with both windows
+    Syy_cop = np.fft.fft(auto_y_cop)
+    # Sxx_ham = np.fft.fft(np.multiply(auto, ham_win))
+    plot(
+        freq_cop,
+        abs(Syy_cop),
+        "frequency (Hz)",
+        "autopower",
+        "Cy Autopower",
+        [0, 1],
+        None,
+    )
+
+    # Entropy Stuff
+    # y_cop_array = np.asarray(y_cop)
+    # y_cop_overlap = skimage.util.view_as_windows(y_cop_array, 1800, step=900)
+
+    # print(y_cop_overlap.shape)
+    # rows = y_cop_overlap.shape[0]
+
+    # approx_entropy = []
+
+    # # for row in tqdm(range(0, rows)):
+    # Parallel(n_jobs=multiprocessing.cpu_count(), require="sharedmem")(
+    #     delayed(collect_approx_entropy)(ApEn(y_cop_overlap[row], 2, 10))
+    #     for row in tqdm(range(0, rows))
+    # )
+
+    # entropy_windows = np.arange(0, rows)
+
+    # plot(
+    #     entropy_windows,
+    #     approx_entropy,
+    #     "Window",
+    #     "Approximate Entropy",
+    #     "Moving approximate entropy of Cy",
+    #     None,
+    #     None,
+    # )
+
+    #################### CoM X-axis analysis ####################
+
+    plot(t_com, x_com, "time (s)", "CoM", "Raw X signal", None, None)
+
+    plt.figure()
+    plt.plot(t_cop, x_cop_standard, t_com, x_com_standard)
+    plt.title("CoP and CoM in x axis")
+    plt.show()
+
+    auto_x_com = np.correlate(x_com_standard, x_com_standard, mode="full")
+    cross_xy_com = np.correlate(x_com_standard, y_com_standard, mode="full")
+
+    plot(
+        t_corr_com,
+        auto_x_com,
+        "time (s)",
+        "autocorrelation",
+        "Autocorrelation of x in CoM",
+        [0, 30],
+        None,
+    )
+
+    plot(
+        t_corr_com,
+        cross_xy_com,
+        "time (s)",
+        "cross correlation",
+        "X and Y CoM cross correlation",
+        None,
+        None,
+    )
+
+    n_auto_com = len(auto_x_com)
+    freq_com = np.arange(0, fs_com, fs_com / n_auto_com)
 
     # create windows
     # rect_win = np.ones(n_auto)
     # ham_win = np.hamming(n_auto)
 
     # calculate PSD with both windows
-    Syy = np.fft.fft(auto)
+    Sxx_com = np.fft.fft(auto_x_com)
     # Sxx_ham = np.fft.fft(np.multiply(auto, ham_win))
-    plot(freq, abs(Syy), "frequency (Hz)", "autopower", "Cy Autopower", [0, 1], None)
+    plot(
+        freq_com,
+        abs(Sxx_com),
+        "Frequency (Hz)",
+        "autopower",
+        "X of CoM Autopower",
+        [0, 1],
+        None,
+    )
 
-    cy_array = np.asarray(cy)
-    cy_overlap = skimage.util.view_as_windows(cy_array, 1800, step=900)
+    Sxy_com = np.fft.fft(cross_xy_com)
+    # Sxy_ham = np.fft.fft(np.multiply(cross, ham_win))
 
-    print(cy_overlap.shape)
-    rows = cy_overlap.shape[0]
+    plot(
+        freq_com,
+        abs(Sxy_com),
+        "frequency (Hz)",
+        "cross power",
+        "Cross Power between X and Y CoM",
+        [0, 0.25],
+        None,
+    )
+
+    x_com_array = np.asarray(x_com)
+    x_com_overlap = skimage.util.view_as_windows(x_com_array, 180, step=90)
+
+    rows = x_com_overlap.shape[0]
 
     approx_entropy = []
 
     # for row in tqdm(range(0, rows)):
     Parallel(n_jobs=multiprocessing.cpu_count(), require="sharedmem")(
-        delayed(collect_approx_entropy)(ApEn(cy_overlap[row], 2, 10))
+        delayed(collect_approx_entropy)(ApEn(x_com_overlap[row], 2, 10))
         for row in tqdm(range(0, rows))
     )
 
@@ -292,7 +427,95 @@ if __name__ == "__main__":
         approx_entropy,
         "Window",
         "Approximate Entropy",
-        "Moving approximate entropy of Cy",
+        "Moving approximate entropy of CoM X",
         None,
         None,
     )
+
+    #################### CoM Y-axis analysis ####################
+
+    plot(t_com, y_com, "time (s)", "CoM", "Raw Y signal", None, None)
+
+    plt.figure()
+    plt.plot(t_cop, y_cop_standard, t_com, y_com_standard)
+    plt.title("CoP and CoM in y axis")
+    plt.show()
+
+    auto_y_com = np.correlate(y_com_standard, y_com_standard, mode="full")
+
+    plot(
+        t_corr_com,
+        auto_y_com,
+        "time (s)",
+        "autocorrelation",
+        "Autocorrelation of CoM Y",
+        [0, 30],
+        None,
+    )
+
+    # create windows
+    # rect_win = np.ones(n_auto)
+    # ham_win = np.hamming(n_auto)
+
+    # calculate PSD with both windows
+    Syy_com = np.fft.fft(auto_y_com)
+    # Sxx_ham = np.fft.fft(np.multiply(auto, ham_win))
+    plot(
+        freq_com,
+        abs(Syy_com),
+        "frequency (Hz)",
+        "autopower",
+        "CoM Y Autopower",
+        [0, 1],
+        None,
+    )
+
+    y_com_array = np.asarray(y_com)
+    y_com_overlap = skimage.util.view_as_windows(y_com_array, 180, step=90)
+
+    rows = y_com_overlap.shape[0]
+
+    approx_entropy = []
+
+    # for row in tqdm(range(0, rows)):
+    Parallel(n_jobs=multiprocessing.cpu_count(), require="sharedmem")(
+        delayed(collect_approx_entropy)(ApEn(y_com_overlap[row], 2, 10))
+        for row in tqdm(range(0, rows))
+    )
+
+    entropy_windows = np.arange(0, rows)
+
+    plot(
+        entropy_windows,
+        approx_entropy,
+        "Window",
+        "Approximate Entropy",
+        "Moving approximate entropy of CoM Y",
+        None,
+        None,
+    )
+
+    # WONT WORK BECAUSE COP AND COM ARE DIFFERENT SIZES
+    # cross_x_cop_com = np.correlate(x_cop_standard, x_com_standard, mode="full")
+
+    # plot(
+    #     t_corr_com,
+    #     cross_x_cop_com,
+    #     "time (s)",
+    #     "autocorrelation",
+    #     "Autocorrelation of x in CoM",
+    #     [0, 30],
+    #     None,
+    # )
+
+    # cross_y_cop_com = np.correlate(y_cop_standard, y_com_standard, mode="full")
+
+    # plot(
+    #     t_corr_com,
+    #     cross_y_cop_com,
+    #     "time (s)",
+    #     "autocorrelation",
+    #     "Autocorrelation of x in CoM",
+    #     [0, 30],
+    #     None,
+    # )
