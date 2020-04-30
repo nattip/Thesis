@@ -23,7 +23,7 @@ import multiprocessing
 # constants
 fs = 1200
 t_tot = np.arange(0, 30, 1 / fs)
-filepath = "/Users/natalietipton/Code/Data/SB01/SB01Trial_19.csv"
+filepath = "/Users/natalietipton/Code/Data/SB01/SB01Trial_09.csv"
 
 # reads data in from .csv files for data with feet together, one force plate
 # returns: cx = CoP x position (AP), cy = CoP y position (ML)
