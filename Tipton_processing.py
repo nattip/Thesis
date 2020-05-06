@@ -25,7 +25,7 @@ fs_cop = 1200
 t_cop = np.arange(0, 30, 1 / fs_cop)
 fs_com = 120
 t_com = np.arange(0, 30, 1 / fs_com)
-filepath = "/Users/natalietipton/Code/Data/SB01/SB01Trial_02.csv"
+filepath = "/Users/natalietipton/Code/Data/SB01/SB01Trial_19.csv"
 
 
 # reads CoP data in from .csv files for data with feet together, one force plate
@@ -50,31 +50,6 @@ def read_data_onefp(filepath, row_start, cols, num_data, rows_skip):
     cy = data["Cy"].values.tolist()
 
     return cx, cy, data["Cx"]
-
-
-# reads CoM data in from .csv files
-# returns: x = CoM x position (AP), y = CoM y position (ML), z = CoM z position
-# user specifies:
-#   header = which row the data starts on (starting at 0, not 1 like the sheet)
-#   usecols = names of the column headers that are to be included
-#   nrows = number of data points to be read in
-#   rows_skip = the number of any rows to not be included (starting at 0)
-def read_data_com(filepath, row_start, cols, num_data, rows_skip):
-    data = pd.read_csv(
-        filepath,
-        header=row_start,
-        usecols=cols,
-        nrows=num_data,
-        dtype={"Cx": np.float64, "Cy": np.float64},
-        skiprows=rows_skip,
-    )
-
-    # convert data frame into lists
-    x = data["X"].values.tolist()
-    y = data["Y"].values.tolist()
-    z = data["Z"].values.tolist()
-
-    return x, y, z
 
 
 # reads CoP data in from .csv files for feet tandem, two force plates
@@ -130,6 +105,31 @@ def read_data_twofp(filepath, row_start, cols, num_data, rows_skip):
     return cx_combined, cy_combined
 
 
+# reads CoM data in from .csv files
+# returns: x = CoM x position (AP), y = CoM y position (ML), z = CoM z position
+# user specifies:
+#   header = which row the data starts on (starting at 0, not 1 like the sheet)
+#   usecols = names of the column headers that are to be included
+#   nrows = number of data points to be read in
+#   rows_skip = the number of any rows to not be included (starting at 0)
+def read_data_com(filepath, row_start, cols, num_data, rows_skip):
+    data = pd.read_csv(
+        filepath,
+        header=row_start,
+        usecols=cols,
+        nrows=num_data,
+        dtype={"Cx": np.float64, "Cy": np.float64},
+        skiprows=rows_skip,
+    )
+
+    # convert data frame into lists
+    x = data["X"].values.tolist()
+    y = data["Y"].values.tolist()
+    z = data["Z"].values.tolist()
+
+    return x, y, z
+
+
 # standardizes the data given using the equation:
 # standard[n] = (data[n] - mean[data]) / standard deviation[data]
 def standardize(data):
@@ -164,29 +164,14 @@ def plot(x, y, xlabel, ylabel, title, xlim, ylim):
     plt.show()
 
 
-# calculates the approximate entropy of a time series signal
-# adapted from: https://en.wikipedia.org/wiki/Approximate_entropy
-def ApEn(U, m, r) -> float:
-    def _maxdist(x_i, x_j):
-        return max([abs(ua - va) for ua, va in zip(x_i, x_j)])
+def deriv(x, y):
+    der = []
+    der.append(0)
 
-    def _phi(m):
-        x = [[U[j] for j in range(i, i + m - 1 + 1)] for i in range(N - m + 1)]
-        C = [
-            len([1 for x_j in x if _maxdist(x_i, x_j) <= r]) / (N - m + 1.0)
-            for x_i in x
-        ]
+    for i in range(0, len(y) - 1):
+        der.append((y[i + 1] - y[i]) / (x[i + 1] - x[i]))
 
-        return (N - m + 1.0) ** (-1) * sum(np.log(C))
-
-    N = len(U)
-
-    return abs(_phi(m + 1) - _phi(m))
-
-
-# collects approximate entroy into a list from each window
-def collect_approx_entropy(x):
-    approx_entropy.append(x)
+    return der
 
 
 #####################################################################################
@@ -223,6 +208,17 @@ if __name__ == "__main__":
 
     plot(t_cop, x_cop, "time (s)", "CoP", "Raw Cx signal", None, None)
 
+    vel_x_cop = []
+    acc_x_cop = []
+
+    vel_x_cop.append(0)
+    acc_x_cop.append(0)
+
+    vel_x_cop = deriv(t_cop, x_cop)
+    acc_x_cop = deriv(t_cop, vel_x_cop)
+
+    plot(t_cop, vel_x_cop, "time (s)", "Velocity", "CoP X Velocity", None, None)
+    plot(t_cop, acc_x_cop, "time (s)", "Acceleration", "CoP X Acceleration", None, None)
     # calculate auto and cross correlations
     auto_x_cop = np.correlate(x_cop_standard, x_cop_standard, mode="full")
     cross_xy_cop = np.correlate(x_cop_standard, y_cop_standard, mode="full")
@@ -275,37 +271,37 @@ if __name__ == "__main__":
         None,
     )
 
-    # increase magnitude of signal for more sensitivity in entropy
-    x_cop_multiplied = np.multiply(x_cop, 100)
+    # # increase magnitude of signal for more sensitivity in entropy
+    # x_cop_multiplied = np.multiply(x_cop, 100)
 
-    # create overlapping windows
-    x_cop_array = np.asarray(x_cop_multiplied)
-    x_cop_overlap = skimage.util.view_as_windows(x_cop_array, 1800, step=900)
-    rows = x_cop_overlap.shape[0]
+    # # create overlapping windows
+    # x_cop_array = np.asarray(x_cop_multiplied)
+    # x_cop_overlap = skimage.util.view_as_windows(x_cop_array, 1800, step=900)
+    # rows = x_cop_overlap.shape[0]
 
-    approx_entropy = []
+    # approx_entropy = []
 
-    # calculate moving approximate entropy
-    Parallel(n_jobs=multiprocessing.cpu_count(), require="sharedmem")(
-        delayed(collect_approx_entropy)(ApEn(x_cop_overlap[row], 2, 10))
-        for row in tqdm(range(0, rows))
-    )
+    # # calculate moving approximate entropy
+    # Parallel(n_jobs=multiprocessing.cpu_count(), require="sharedmem")(
+    #     delayed(collect_approx_entropy)(ApEn(x_cop_overlap[row], 2, 10))
+    #     for row in tqdm(range(0, rows))
+    # )
 
-    # find average approximate entropy
-    avg_entr_x_cop = np.mean(approx_entropy)
-    print("Average entropy for X CoP =", avg_entr_x_cop)
+    # # find average approximate entropy
+    # avg_entr_x_cop = np.mean(approx_entropy)
+    # print("Average entropy for X CoP =", avg_entr_x_cop)
 
-    entropy_windows = np.arange(0, rows)
+    # entropy_windows = np.arange(0, rows)
 
-    plot(
-        entropy_windows,
-        approx_entropy,
-        "Window",
-        "Approximate Entropy",
-        "Moving approximate entropy of Cx",
-        None,
-        [0, 0.4],
-    )
+    # plot(
+    #     entropy_windows,
+    #     approx_entropy,
+    #     "Window",
+    #     "Approximate Entropy",
+    #     "Moving approximate entropy of Cx",
+    #     None,
+    #     [0, 0.4],
+    # )
 
     #################### CoP Y-axis analysis ####################
 
@@ -336,34 +332,34 @@ if __name__ == "__main__":
     )
 
     # Entropy Stuff
-    y_cop_multiplied = np.multiply(y_cop, 100)
-    y_cop_array = np.asarray(y_cop_multiplied)
-    y_cop_overlap = skimage.util.view_as_windows(y_cop_array, 1800, step=900)
+    # y_cop_multiplied = np.multiply(y_cop, 100)
+    # y_cop_array = np.asarray(y_cop_multiplied)
+    # y_cop_overlap = skimage.util.view_as_windows(y_cop_array, 1800, step=900)
 
-    print(y_cop_overlap.shape)
-    rows = y_cop_overlap.shape[0]
+    # print(y_cop_overlap.shape)
+    # rows = y_cop_overlap.shape[0]
 
-    approx_entropy = []
+    # approx_entropy = []
 
-    Parallel(n_jobs=multiprocessing.cpu_count(), require="sharedmem")(
-        delayed(collect_approx_entropy)(ApEn(y_cop_overlap[row], 2, 10))
-        for row in tqdm(range(0, rows))
-    )
+    # Parallel(n_jobs=multiprocessing.cpu_count(), require="sharedmem")(
+    #     delayed(collect_approx_entropy)(ApEn(y_cop_overlap[row], 2, 10))
+    #     for row in tqdm(range(0, rows))
+    # )
 
-    avg_entr_y_cop = np.mean(approx_entropy)
-    print("Average entropy for Y CoP =", avg_entr_y_cop)
+    # avg_entr_y_cop = np.mean(approx_entropy)
+    # print("Average entropy for Y CoP =", avg_entr_y_cop)
 
-    entropy_windows = np.arange(0, rows)
+    # entropy_windows = np.arange(0, rows)
 
-    plot(
-        entropy_windows,
-        approx_entropy,
-        "Window",
-        "Approximate Entropy",
-        "Moving approximate entropy of Cy",
-        None,
-        [0, 0.4],
-    )
+    # plot(
+    #     entropy_windows,
+    #     approx_entropy,
+    #     "Window",
+    #     "Approximate Entropy",
+    #     "Moving approximate entropy of Cy",
+    #     None,
+    #     [0, 0.4],
+    # )
 
     #################### CoM X-axis analysis ####################
 
@@ -424,33 +420,33 @@ if __name__ == "__main__":
         None,
     )
 
-    x_com_multiplied = np.multiply(x_com, 100)
-    x_com_array = np.asarray(x_com_multiplied)
-    x_com_overlap = skimage.util.view_as_windows(x_com_array, 180, step=90)
+    # x_com_multiplied = np.multiply(x_com, 100)
+    # x_com_array = np.asarray(x_com_multiplied)
+    # x_com_overlap = skimage.util.view_as_windows(x_com_array, 180, step=90)
 
-    rows = x_com_overlap.shape[0]
+    # rows = x_com_overlap.shape[0]
 
-    approx_entropy = []
+    # approx_entropy = []
 
-    Parallel(n_jobs=multiprocessing.cpu_count(), require="sharedmem")(
-        delayed(collect_approx_entropy)(ApEn(x_com_overlap[row], 2, 10))
-        for row in tqdm(range(0, rows))
-    )
+    # Parallel(n_jobs=multiprocessing.cpu_count(), require="sharedmem")(
+    #     delayed(collect_approx_entropy)(ApEn(x_com_overlap[row], 2, 10))
+    #     for row in tqdm(range(0, rows))
+    # )
 
-    avg_entr_x_com = np.mean(approx_entropy)
-    print("Average entropy for X CoM =", avg_entr_x_com)
+    # avg_entr_x_com = np.mean(approx_entropy)
+    # print("Average entropy for X CoM =", avg_entr_x_com)
 
-    entropy_windows = np.arange(0, rows)
+    # entropy_windows = np.arange(0, rows)
 
-    plot(
-        entropy_windows,
-        approx_entropy,
-        "Window",
-        "Approximate Entropy",
-        "Moving approximate entropy of CoM X",
-        None,
-        [0, 0.4],
-    )
+    # plot(
+    #     entropy_windows,
+    #     approx_entropy,
+    #     "Window",
+    #     "Approximate Entropy",
+    #     "Moving approximate entropy of CoM X",
+    #     None,
+    #     [0, 0.4],
+    # )
 
     #################### CoM Y-axis analysis ####################
 
@@ -485,33 +481,33 @@ if __name__ == "__main__":
         None,
     )
 
-    y_com_multiplied = np.multiply(y_com, 100)
-    y_com_array = np.asarray(y_com_multiplied)
-    y_com_overlap = skimage.util.view_as_windows(y_com_array, 180, step=90)
+    # y_com_multiplied = np.multiply(y_com, 100)
+    # y_com_array = np.asarray(y_com_multiplied)
+    # y_com_overlap = skimage.util.view_as_windows(y_com_array, 180, step=90)
 
-    rows = y_com_overlap.shape[0]
+    # rows = y_com_overlap.shape[0]
 
-    approx_entropy = []
+    # approx_entropy = []
 
-    Parallel(n_jobs=multiprocessing.cpu_count(), require="sharedmem")(
-        delayed(collect_approx_entropy)(ApEn(y_com_overlap[row], 2, 10))
-        for row in tqdm(range(0, rows))
-    )
+    # Parallel(n_jobs=multiprocessing.cpu_count(), require="sharedmem")(
+    #     delayed(collect_approx_entropy)(ApEn(y_com_overlap[row], 2, 10))
+    #     for row in tqdm(range(0, rows))
+    # )
 
-    avg_entr_y_com = np.mean(approx_entropy)
-    print("Average entropy for Y CoM =", avg_entr_y_com)
+    # avg_entr_y_com = np.mean(approx_entropy)
+    # print("Average entropy for Y CoM =", avg_entr_y_com)
 
-    entropy_windows = np.arange(0, rows)
+    # entropy_windows = np.arange(0, rows)
 
-    plot(
-        entropy_windows,
-        approx_entropy,
-        "Window",
-        "Approximate Entropy",
-        "Moving approximate entropy of CoM Y",
-        None,
-        [0, 0.4],
-    )
+    # plot(
+    #     entropy_windows,
+    #     approx_entropy,
+    #     "Window",
+    #     "Approximate Entropy",
+    #     "Moving approximate entropy of CoM Y",
+    #     None,
+    #     [0, 0.4],
+    # )
 
     x_cop_df_resample = []
     y_cop_df_resample = []
