@@ -19,7 +19,7 @@ import skimage
 from tqdm import tqdm
 from joblib import Parallel, delayed
 import multiprocessing
-import analysis_libV2 as an
+import analysis_lib as an
 
 # constants
 fs_cop = 1200

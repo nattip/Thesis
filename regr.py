@@ -1,10 +1,20 @@
+# Written by: Natalie Tipton
+# Advisor: Dr. Samhita Rhodes
+#
+# Created on: May 6, 2020
+#
+# Description: Performs least squares linear
+#   regression on data to obtain a baseline model
+#
+# Last updated: May 13, 2020
+
 import operator
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
-import analysis_libV2 as an
+import analysis_lib as an
 
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
