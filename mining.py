@@ -10,6 +10,7 @@
 
 import pandas as pd
 import os
+import numpy as np
 import pickle
 
 ROOT = "/Users/natalietipton/Code/Data"
@@ -37,34 +38,47 @@ if __name__ == "__main__":
     # loop through all files in all subdirectories and read in
     # first column of CoM data to determine how many missing cells
     for directory in dirs:
+        print(directory)
         for file in dirs[directory]:
             # skip the files known to have no CoM data, as they
             # will not read in correctly
-            if (
-                file == "SB05_Trial11.csv"
-                or file == "SB05_Trial13.csv"
-                or file == "SB05_Trial14.csv"
-                or file == "SB05_Trial15.csv"
-                or file == "SB05_Trial16.csv"
-                or file == "SB05_Trial24.csv"
-                or file == "SB05_Trial28.csv"
-                or file == "SB05_Trial29.csv"
-                or file == "SB05_Trial03.csv"
-            ):
-                continue
+            # if (
+            #     file == "SB05_Trial11.csv"
+            #     or file == "SB05_Trial13.csv"
+            #     or file == "SB05_Trial14.csv"
+            #     or file == "SB05_Trial15.csv"
+            #     or file == "SB05_Trial16.csv"
+            #     or file == "SB05_Trial24.csv"
+            #     or file == "SB05_Trial28.csv"
+            #     or file == "SB05_Trial29.csv"
+            #     or file == "SB05_Trial03.csv"
+            # ):
+            #     continue
 
             # read first column of CoM data
+            # sheet = pd.read_csv(
+            #     os.path.join(directory, file),
+            #     engine="python",
+            #     header=36008,
+            #     usecols=[2],
+            #     nrows=3600,
+            #     skiprows=[36010],
+            # )
+
+            # # count empty cells in CoM data
+            # nulls = sheet.isna().sum().sum()
+            # # print number of empty cells if > 0
+            # if nulls > 0:
+            #     print(file, "missing:", nulls)
+
             sheet = pd.read_csv(
                 os.path.join(directory, file),
-                engine="python",
-                header=36008,
-                usecols=[2],
-                nrows=3600,
-                skiprows=[36010],
+                header=3,
+                usecols=["Cx"],
+                nrows=36000,
+                skiprows=[4],
             )
-
-            # count empty cells in CoM data
-            nulls = sheet.isna().sum().sum()
-            # print number of empty cells if > 0
-            if nulls > 0:
-                print(file, "missing:", nulls)
+            print(np.count_nonzero(sheet["Cx"]))
+            # if len(np.nonzero(sheet)) < 30000:
+            #     print(len(np.nonzero(sheet)))
+            #     print(file)

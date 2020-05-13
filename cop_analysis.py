@@ -7,7 +7,7 @@
 #   during stability testing in neuronormative
 #   subjects for thesis research.
 #
-# Last updated: May 8, 2020
+# Last updated: May 13, 2020
 
 # import packages
 import matplotlib.pyplot as plt
@@ -19,26 +19,26 @@ import skimage
 from tqdm import tqdm
 from joblib import Parallel, delayed
 import multiprocessing
-import analysis as an
+import analysis_libV2 as an
 
 # constants
 fs_cop = 1200
 t_cop = np.arange(0, 30, 1 / fs_cop)
 fs_com = 120
 t_com = np.arange(0, 30, 1 / fs_com)
-filepath = "/Users/natalietipton/Code/Data/SB01/SB01Trial_20.csv"
+filepath = "/Users/natalietipton/Code/Data/SB04/SB04_Trial19.csv"
 
 #####################################################################################
 
 if __name__ == "__main__":
 
     # function call for one force plate files
-    # x_cop, y_cop, x_cop_df = read_data_onefp(filepath, 3, ["Cx", "Cy"], 36000, [4])
+    x_cop, y_cop, x_cop_df = an.read_data_onefp(filepath, 3, ["Cx", "Cy"], 36000, [4])
 
     # function call for two force plate files
-    x_cop, y_cop = an.read_data_twofp(
-        filepath, 3, ["Fz", "Cx", "Cy", "Fz.1", "Cx.1", "Cy.1"], 36000, [4]
-    )
+    # x_cop, y_cop = an.read_data_twofp(
+    #     filepath, 3, ["Fz", "Cx", "Cy", "Fz.1", "Cx.1", "Cy.1"], 36000, [4]
+    # )
 
     # get length of signals
     n_cop = len(x_cop)
