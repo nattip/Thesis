@@ -33,15 +33,6 @@ t_cop = np.arange(0, 30, 1 / fs_cop)
 # vel_y_avgs = []
 # pow_y_tot = []
 
-vel_x_avgs_together = []
-pow_x_tot_together = []
-vel_y_avgs_together = []
-pow_y_tot_together = []
-
-vel_x_avgs_tandem = []
-pow_x_tot_tandem = []
-vel_y_avgs_tandem = []
-pow_y_tot_tandem = []
 
 #####################################################################################
 
@@ -68,8 +59,24 @@ if __name__ == "__main__":
     # loop through all files in all subdirectories
     for directory in dirs:
         print(directory)
+        if int(directory[-1]) == 4:
+            sub4 = True
+        else:
+            sub4 = False
+
+        vel_x_avgs_together = []
+        pow_x_tot_together = []
+        vel_y_avgs_together = []
+        pow_y_tot_together = []
+
+        vel_x_avgs_tandem = []
+        pow_x_tot_tandem = []
+        vel_y_avgs_tandem = []
+        pow_y_tot_tandem = []
+
         for file in dirs[directory]:
             number = int(file[10:12])
+
             # if number > 11:
             #     continue
 
@@ -87,6 +94,10 @@ if __name__ == "__main__":
                 df = df.to_numpy()
                 values = np.delete(df, 0, 1)
                 x_cop, y_cop = values.T
+
+                if sub4 and number < 17:
+                    x_cop = an.butter_lowpass_filter(x_cop, 6, fs_cop)
+                    y_cop = an.butter_lowpass_filter(y_cop, 6, fs_cop)
 
                 vel_x_cop = an.deriv(t_cop, x_cop)
                 vel_x_avgs_together.append(
@@ -112,6 +123,10 @@ if __name__ == "__main__":
                 df = df.to_numpy()
                 values = np.delete(df, 0, 1)
                 x_cop, y_cop = values.T
+
+                if sub4 and number < 17:
+                    x_cop = an.butter_lowpass_filter(x_cop, 6, fs_cop)
+                    y_cop = an.butter_lowpass_filter(y_cop, 6, fs_cop)
 
                 vel_x_cop = an.deriv(t_cop, x_cop)
                 vel_x_avgs_tandem.append(np.mean(sorted(vel_x_cop, reverse=True)[:10]))
@@ -156,13 +171,13 @@ if __name__ == "__main__":
         mult_pow_x = np.mean(pow_x_tot_tandem) / np.mean(pow_x_tot_together)
         mult_pow_y = np.mean(pow_y_tot_tandem) / np.mean(pow_y_tot_together)
 
-        print(f"Average Velocity Delta X CoP= {format(round(delta_vel_x,2), 'e')}")
+        # print(f"Average Velocity Delta X CoP= {format(round(delta_vel_x,2), 'e')}")
         print(f"Multiple Velocity Delta X CoP = {format(round(mult_vel_x,2), 'e')}")
-        print(f"Average Velocity Delta Y CoP = {format(round(delta_vel_y,2), 'e')}")
+        # print(f"Average Velocity Delta Y CoP = {format(round(delta_vel_y,2), 'e')}")
         print(f"Multiple Velocity Delta Y CoP = {format(round(mult_vel_y,2), 'e')}")
-        print(f"Average Power Delta X CoP = {format(round(delta_pow_x,2), 'e')}")
+        # print(f"Average Power Delta X CoP = {format(round(delta_pow_x,2), 'e')}")
         print(f"Multiple Power Delta X CoP = {format(round(mult_pow_x,2), 'e')}")
-        print(f"Average Power Delta Y CoP = {format(round(delta_pow_y,2), 'e')}")
+        # print(f"Average Power Delta Y CoP = {format(round(delta_pow_y,2), 'e')}")
         print(f"Multiple Power Delta Y CoP = {format(round(mult_pow_y,2), 'e')}")
 
         # print(f"Average Velocity X CoP = {format(round(np.mean(vel_x_avgs_together),2), 'e')}")

@@ -23,7 +23,9 @@ from scipy.stats import norm
 
 
 ROOT = "/Users/natalietipton/Code/center_of_pressure/data"
-t_cop = np.arange(0, 30, 1 / 1200)
+fs_cop = 1200
+t_cop = np.arange(0, 30, 1 / fs_cop)
+
 # t_cop = t_cop[:, np.newaxis]
 
 regression_x_together = pd.DataFrame()
@@ -116,33 +118,54 @@ if __name__ == "__main__":
     # loop through all files in all subdirectories
     for directory in dirs:
         print(directory)
+        if int(directory[-1]) == 4:
+            sub4 = True
+        else:
+            sub4 = False
+
         for file in dirs[directory]:
             number = int(file[10:12])
 
-            # if number > 11:
-            df = pd.read_csv(os.path.join(directory, file), index_col=False)
+            if number < 7:
+                df = pd.read_csv(os.path.join(directory, file), index_col=False)
 
-            df = df.to_numpy()
-            values = np.delete(df, 0, 1)
-            Xaxis, Yaxis = values.T
+                df = df.to_numpy()
+                values = np.delete(df, 0, 1)
+                Xaxis, Yaxis = values.T
 
-            # Xaxis = an.standardize(Xaxis)
-            # Yaxis = an.standardize(Yaxis)
+                if sub4 and number < 17:
+                    Xaxis = an.butter_lowpass_filter(Xaxis, 6, fs_cop)
+                    Yaxis = an.butter_lowpass_filter(Yaxis, 6, fs_cop)
 
-            all_x_data.append(Xaxis)
-            all_y_data.append(Yaxis)
+                # Xaxis = an.standardize(Xaxis)
+                # Yaxis = an.standardize(Yaxis)
+
+                all_x_data.append(Xaxis)
+                all_y_data.append(Yaxis)
 
     all_x_data = np.array(all_x_data)
     all_y_data = np.array(all_y_data)
 
     avg_x_data = np.mean(all_x_data, axis=0)
     avg_y_data = np.mean(all_y_data, axis=0)
-    # print(avg_x_data)
+
     an.plot(
-        t_cop, avg_x_data, "time", "signal", "Average of all X Axis", None, None,
+        t_cop,
+        avg_x_data,
+        "time",
+        "signal",
+        "Average of all Feet Together X Axis",
+        None,
+        None,
     )
     an.plot(
-        t_cop, avg_y_data, "time", "signal", "Average of all Y Axis", None, None,
+        t_cop,
+        avg_y_data,
+        "time",
+        "signal",
+        "Average of all Feet Together Y Axis",
+        None,
+        None,
     )
 
     avg_x_data = avg_x_data[:, np.newaxis]

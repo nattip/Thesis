@@ -20,13 +20,14 @@ from tqdm import tqdm
 from joblib import Parallel, delayed
 import multiprocessing
 import analysis_lib as an
+from scipy import signal
 
 # constants
 fs_cop = 1200
 t_cop = np.arange(0, 30, 1 / fs_cop)
-fs_com = 120
-t_com = np.arange(0, 30, 1 / fs_com)
-filepath = "/Users/natalietipton/Code/Data/SB04/SB04_Trial19.csv"
+
+filepath = "/Users/natalietipton/Code/Data/SB05/SB05_Trial02.csv"
+
 
 #####################################################################################
 
@@ -35,10 +36,13 @@ if __name__ == "__main__":
     # function call for one force plate files
     x_cop, y_cop, x_cop_df = an.read_data_onefp(filepath, 3, ["Cx", "Cy"], 36000, [4])
 
-    # function call for two force plate files
+    # # function call for two force plate files
     # x_cop, y_cop = an.read_data_twofp(
     #     filepath, 3, ["Fz", "Cx", "Cy", "Fz.1", "Cx.1", "Cy.1"], 36000, [4]
     # )
+
+    x_cop = an.butter_lowpass_filter(x_cop, 6, fs_cop)
+    y_cop = an.butter_lowpass_filter(y_cop, 6, fs_cop)
 
     # get length of signals
     n_cop = len(x_cop)
@@ -106,6 +110,7 @@ if __name__ == "__main__":
 
     Sxx_cop = np.fft.fft(auto_x_cop)
     Sxx_vel_cop = np.fft.fft(auto_vel_x_cop)
+    print(abs(np.max(Sxx_vel_cop)))
     print(f"Total Power of X CoP Velocity = {sum(abs(Sxx_vel_cop))}")
 
     an.plot(
@@ -114,7 +119,7 @@ if __name__ == "__main__":
         "Frequency (Hz)",
         "autopower",
         "Cx Autopower",
-        [0, 1],
+        [0, 10],
         None,
     )
 
@@ -189,7 +194,7 @@ if __name__ == "__main__":
         "frequency (Hz)",
         "autopower",
         "Cy Autopower",
-        [0, 1],
+        [0, 10],
         None,
     )
 

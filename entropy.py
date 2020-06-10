@@ -19,17 +19,18 @@ from joblib import Parallel, delayed
 import multiprocessing
 import analysis_lib as an
 import os
-import ray
 
-ray.init()
+# import ray
+
+# ray.init()
 
 # constants
 fs_cop = 1200
 t_cop = np.arange(0, 30, 1 / fs_cop)
 fs_com = 120
 t_com = np.arange(0, 30, 1 / fs_com)
-# filepath = "/Users/natalietipton/Code/Data/SB01/SB01Trial_02.csv"
-ROOT = f"{os.environ.get('HOME')}/Code/center_of_pressure/data"
+filepath = "/Users/natalietipton/Code/Data/SB01/SB01Trial_22.csv"
+# ROOT = f"{os.environ.get('HOME')}/Code/center_of_pressure/data"
 
 avg_ent_x_together = []
 avg_ent_y_together = []
@@ -43,7 +44,7 @@ def to_iter(obj):
         yield ray.get(done[0])
 
 
-@ray.remote
+# @ray.remote
 def process_directory(directory):
     for file in dirs[directory]:
         number = int(file[10:12])
@@ -91,7 +92,7 @@ def process_directory(directory):
 if __name__ == "__main__":
 
     # # function call for one force plate files
-    # x_cop, y_cop, x_cop_df = an.read_data_onefp(filepath, 3, ["Cx", "Cy"], 36000, [4])
+    x_cop, y_cop, x_cop_df = an.read_data_onefp(filepath, 3, ["Cx", "Cy"], 36000, [4])
 
     # # function call for two force plate files
     # # x_cop, y_cop = read_data_twofp(
@@ -104,28 +105,31 @@ if __name__ == "__main__":
     # )
 
     # determing all subdirectories in root directory
-    folders = [x[0] for x in os.walk(ROOT)]
-    # remove the root directory from folders
-    folders.remove(ROOT)
-    # find all file names in the subdirectories
-    files = [
-        (os.path.join(ROOT, folder), os.listdir(os.path.join(ROOT, folder)))
-        for folder in folders
-    ]
+    # folders = [x[0] for x in os.walk(ROOT)]
+    # # remove the root directory from folders
+    # folders.remove(ROOT)
+    # # find all file names in the subdirectories
+    # files = [
+    #     (os.path.join(ROOT, folder), os.listdir(os.path.join(ROOT, folder)))
+    #     for folder in folders
+    # ]
 
-    # create a dictionary showing what filenames are within each folder
-    dirs = {}
-    for folder_name, file_list in files:
-        # remove irrelevant file names
-        if ".DS_Store" in file_list:
-            file_list.remove(".DS_Store")
-        dirs[folder_name] = file_list
+    # # create a dictionary showing what filenames are within each folder
+    # dirs = {}
+    # for folder_name, file_list in files:
+    #     # remove irrelevant file names
+    #     if ".DS_Store" in file_list:
+    #         file_list.remove(".DS_Store")
+    #     dirs[folder_name] = file_list
 
-    # loop through all files in all subdirectories
-    futures = [process_directory.remote(directory) for directory in dirs]
-    # for directory in tqdm(dirs):
-    #     process_directory(directory)
-    for x in tqdm(to_iter(futures), total=len(futures)):
-        pass
-    # an.approx_ent(x_com, 180, 90, 100, "X CoM")
-    # an.approx_ent(y_com, 180, 90, 100, "Y CoM")
+    # # loop through all files in all subdirectories
+    # futures = [process_directory.remote(directory) for directory in dirs]
+    # # for directory in tqdm(dirs):
+    # #     process_directory(directory)
+    # for x in tqdm(to_iter(futures), total=len(futures)):
+    #     pass
+    ent_x = an.approx_ent(x_cop, 1800, 900, 100, "X CoP")
+    ent_y = an.approx_ent(y_cop, 1800, 900, 1000, "Y CoP")
+
+    print(ent_x)
+    print(ent_y)

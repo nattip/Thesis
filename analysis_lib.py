@@ -17,6 +17,7 @@ import skimage
 from tqdm import tqdm
 from joblib import Parallel, delayed
 import multiprocessing
+from scipy import signal
 
 # reads CoP data in from .csv files for data with feet together, one force plate
 # returns: cx = CoP x position (AP), cy = CoP y position (ML)
@@ -200,6 +201,7 @@ def approx_ent(x, win_size, overlap, mult, name):
     # calculate moving approximate entropy
     Parallel(n_jobs=multiprocessing.cpu_count(), require="sharedmem")(
         delayed(collect_approx_entropy)(approx_entropy, (ApEn(x_overlap[row], 2, 10)))
+        # delayed(collect_approx_entropy)(approx_entropy, (ApEn(x_overlap[row], 2, 10)))
         for row in tqdm(range(0, rows))
     )
 
@@ -207,16 +209,29 @@ def approx_ent(x, win_size, overlap, mult, name):
     avg_entr = np.mean(approx_entropy)
     # print(f"Average entropy for {name} = {avg_entr}")
 
+    entropy_windows = np.arange(0, rows)
+
+    plot(
+        entropy_windows,
+        approx_entropy,
+        "Window",
+        "Approximate Entropy",
+        f"Moving approximate entropy of {name}",
+        None,
+        [0, 0.4],
+    )
+
     return avg_entr
 
-    # entropy_windows = np.arange(0, rows)
 
-    # plot(
-    #     entropy_windows,
-    #     approx_entropy,
-    #     "Window",
-    #     "Approximate Entropy",
-    #     f"Moving approximate entropy of {name}",
-    #     None,
-    #     [0, 0.4],
-    # )
+def butter_lowpass(cutoff, fs, order=4):
+    normal_cutoff = float(cutoff) / (fs / 2)
+    b, a = signal.butter(order, normal_cutoff, btype="lowpass", analog=False)
+    return b, a
+
+
+def butter_lowpass_filter(data, cutoff_freq, fs, order=4):
+    # Source: https://github.com/guillaume-chevalier/filtering-stft-and-laplace-transform
+    b, a = butter_lowpass(cutoff_freq, fs, order=order)
+    y = signal.filtfilt(b, a, data)
+    return y
