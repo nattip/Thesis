@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import analysis_lib as an
 
 # ######## auto/cross correlation #########
 
@@ -27,22 +28,22 @@ import pandas as pd
 #     return abs(_phi(m + 1) - _phi(m))
 
 
-# fx = 5
-# fy = 2
-# fs = 100
-# t = np.arange(0, 3, 1 / fs)
-# y = np.sin(2 * np.pi * fy * t)
-# x = np.cos(2 * np.pi * fx * t)
+fx = 5
+fy = 2
+fs = 100
+t = np.arange(0, 3, 1 / fs)
+y = np.sin(2 * np.pi * fy * t) + np.cos(2 * np.pi * fx * t)
+x = np.cos(2 * np.pi * fx * t)
 
-# N = len(y)
-# t_corr = np.arange(-N / fs, N / fs - 1 / fs, 1 / fs)
+N = len(y)
+t_corr = np.arange(-N / fs, N / fs - 1 / fs, 1 / fs)
 
-# plt.figure()
-# plt.plot(t, y)
-# plt.show()
+plt.figure()
+plt.plot(t, y)
+plt.show()
 
-# auto = np.correlate(y, y, mode="full")
-# cross = np.correlate(y, x, mode="full")
+auto = np.correlate(y, y, mode="full")
+cross = np.correlate(y, x, mode="full")
 
 # plt.figure()
 # plt.plot(t_corr, auto)
@@ -59,25 +60,26 @@ import pandas as pd
 
 # ############### auto power ####################
 
-# N = len(auto)
+N = len(auto)
 # # freq = np.arange(0, (N - 1) * (fs / N), fs / N)
-# freq = np.arange(0, fs, fs / N)
+freq = np.arange(0, fs, fs / N)
 
 
-# # create windows
-# rect_win = np.ones(N)
-# ham_win = np.hamming(N)
+# create windows
+rect_win = np.ones(N)
+ham_win = np.hamming(N)
 
-# # calculate PSD with both windows
-# Sxx_rect = np.fft.fft(np.multiply(auto, rect_win))
-# Sxx_ham = np.fft.fft(np.multiply(auto, ham_win))
+# calculate PSD with both windows
+Sxx_rect = np.fft.fft(np.multiply(auto, rect_win))
+Sxx_ham = np.fft.fft(np.multiply(auto, ham_win))
 
-# plt.figure()
-# plt.plot(freq, abs(Sxx_rect))
-# plt.xlabel("frequency")
-# plt.ylabel("autopower")
-# plt.xlim(0, 10)
-# plt.show()
+plt.figure()
+plt.plot(freq, abs(Sxx_rect))
+plt.xlabel("frequency (Hz)")
+plt.ylabel("autopower")
+plt.title("PSD of 2 Hz sine wave plus 5 Hz cosine wave")
+plt.xlim(0, 10)
+plt.show()
 
 # ############### cross power ####################
 
@@ -109,30 +111,56 @@ import pandas as pd
 #   nrows = number of data points to be read in
 #   rows_skip = the number of any rows to not be included (starting at 0)
 
-data = pd.read_csv(
-    "/Users/natalietipton/Code/Data/SB01/SB01Trial_19.csv",
-    header=3,
-    usecols=["Fz", "Cx", "Cy", "Fz.1", "Cx.1", "Cy.1",],
-    nrows=36000,
-    dtype={
-        "Fz": np.float64,
-        "Cx": np.float64,
-        "Cy": np.float64,
-        "Fz.1": np.float64,
-        "Cx.1": np.float64,
-        "Cy.1": np.float64,
-    },
-    skiprows=[4],
-)
+# data = pd.read_csv(
+#     "/Users/natalietipton/Code/Data/SB01/SB01Trial_19.csv",
+#     header=3,
+#     usecols=["Fz", "Cx", "Cy", "Fz.1", "Cx.1", "Cy.1",],
+#     nrows=36000,
+#     dtype={
+#         "Fz": np.float64,
+#         "Cx": np.float64,
+#         "Cy": np.float64,
+#         "Fz.1": np.float64,
+#         "Cx.1": np.float64,
+#         "Cy.1": np.float64,
+#     },
+#     skiprows=[4],
+# )
 
-# convert data frame into lists
-fz = data["Fz"].values.tolist()
-cx = data["Cx"].values.tolist()
-cy = data["Cy"].values.tolist()
-fz_1 = data["Fz.1"].values.tolist()
-cx_1 = data["Cx.1"].values.tolist()
-cy_1 = data["Cy.1"].values.tolist()
+# # convert data frame into lists
+# fz = data["Fz"].values.tolist()
+# cx = data["Cx"].values.tolist()
+# cy = data["Cy"].values.tolist()
+# fz_1 = data["Fz.1"].values.tolist()
+# cx_1 = data["Cx.1"].values.tolist()
+# cy_1 = data["Cy.1"].values.tolist()
 
 
-print(cx_combined[0])
-print(cy_combined[0])
+# print(cx_combined[0])
+# print(cy_combined[0])
+
+######### ap en examples ########
+
+# fx = 5
+# fs = 100
+# t = np.arange(0, 3, 1 / fs)
+# sine = np.sin(2 * np.pi * fx * t)
+# noise = np.random.random(size=len(t))
+
+# ent_sin = an.ApEn(sine, 2, 1)
+# ent_noise = an.ApEn(noise, 2, 1)
+
+# an.plot(
+#     t, sine, "time (s)", "Magnitude", f"Sine Wave, Entropy = {ent_sin}", None, None,
+# )
+
+# an.plot(
+#     t,
+#     noise,
+#     "time (s)",
+#     "Magnitude",
+#     f"White Noise, Entropy = {ent_noise}",
+#     None,
+#     None,
+# )
+

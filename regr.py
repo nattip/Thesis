@@ -6,13 +6,14 @@
 # Description: Performs least squares linear
 #   regression on data to obtain a baseline model
 #
-# Last updated: May 13, 2020
+# Last updated: June 30, 2020
 
 import operator
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib
 import os
 import analysis_lib as an
 
@@ -61,20 +62,20 @@ def get_prediction_interval(prediction, y_test, test_predictions, pi=0.95):
     return lower, upper
 
 
-def poly(X, Y):
+def poly(X, Y, subplt, dir):
     polynomial_features = PolynomialFeatures(degree=9)
     X_polynomial = polynomial_features.fit_transform(X)
 
     model = LinearRegression()
     model.fit(X_polynomial, Y)
-    print(model.coef_)
+    # print(model.coef_)
 
     y_polynomial_predictions = model.predict(X_polynomial)
 
     rmse = np.sqrt(mean_squared_error(Y, y_polynomial_predictions))
     r2 = r2_score(Y, y_polynomial_predictions)
-    print(f"RMSE: {rmse}")
-    print(f"R2: {r2}")
+    # print(f"RMSE: {rmse}")
+    # print(f"R2: {r2}")
 
     X_upper = []
     X_lower = []
@@ -84,14 +85,22 @@ def poly(X, Y):
         X_upper.append(upper)
         X_lower.append(lower)
 
+    label = r"$r^{2}$ = " + str(round(r2, 3))
+
+    plt.subplot(subplt)
     plt.plot(X, Y)
     sort_axis = operator.itemgetter(0)
     sorted_zip = sorted(zip(X, y_polynomial_predictions), key=sort_axis)
     x, y_polynomial_predictions = zip(*sorted_zip)
     plt.plot(x, y_polynomial_predictions, color="m")
     plt.plot(x, X_upper, color="r")
-    plt.plot(x, X_lower, color="g")
-    plt.show()
+    plt.plot(x, X_lower, color="r")
+    # plt.text(25, max(Y), label, fontsize=12)
+    plt.xlabel("Time (s)")
+    plt.ylabel("Signal Approximation")
+    plt.title(f"Regression model for all trials in the {dir} direction\n{label}")
+    plt.legend(["Average Signal", "Model", "95% prediction interval"])
+    # plt.show()
 
     # return y_polynomial_predictions
 
@@ -117,7 +126,6 @@ if __name__ == "__main__":
 
     # loop through all files in all subdirectories
     for directory in dirs:
-        print(directory)
         if int(directory[-1]) == 4:
             sub4 = True
         else:
@@ -126,7 +134,7 @@ if __name__ == "__main__":
         for file in dirs[directory]:
             number = int(file[10:12])
 
-            if number < 7:
+            if number < 32:
                 df = pd.read_csv(os.path.join(directory, file), index_col=False)
 
                 df = df.to_numpy()
@@ -149,77 +157,30 @@ if __name__ == "__main__":
     avg_x_data = np.mean(all_x_data, axis=0)
     avg_y_data = np.mean(all_y_data, axis=0)
 
-    an.plot(
-        t_cop,
-        avg_x_data,
-        "time",
-        "signal",
-        "Average of all Feet Together X Axis",
-        None,
-        None,
-    )
-    an.plot(
-        t_cop,
-        avg_y_data,
-        "time",
-        "signal",
-        "Average of all Feet Together Y Axis",
-        None,
-        None,
-    )
+    # an.plot(
+    #     t_cop,
+    #     avg_x_data,
+    #     "time",
+    #     "signal",
+    #     "Average of all Feet Together X Axis",
+    #     None,
+    #     None,
+    # )
+    # an.plot(
+    #     t_cop,
+    #     avg_y_data,
+    #     "time",
+    #     "signal",
+    #     "Average of all Feet Together Y Axis",
+    #     None,
+    #     None,
+    # )
 
     avg_x_data = avg_x_data[:, np.newaxis]
     avg_y_data = avg_y_data[:, np.newaxis]
     t_cop = t_cop[:, np.newaxis]
 
-    poly(t_cop, avg_x_data)
-    poly(t_cop, avg_y_data)
-    #         # print(regression_x)
-
-    #         regression_x = pd.DataFrame(regression_x.toarray())
-    #         regression_y = pd.DataFrame(regression_y.toarray())
-
-    #         regression_x_together = regression_x_together.DataFrame.append(
-    #             regression_x
-    #         )
-    #         regression_y_together = regression_y_together.DataFrame.append(
-    #             regression_y
-    #         )
-
-    # print(regression_x_together)
-    ################################
-    # def poly(X, Y):
-    #     polynomial_features = PolynomialFeatures(degree=9)
-    #     X_polynomial = polynomial_features.fit_transform(X)
-
-    #     model = LinearRegression()
-    #     model.fit(X_polynomial, Y)
-
-    #     y_polynomial_predictions = model.predict(X_polynomial)
-
-    #     rmse = np.sqrt(mean_squared_error(Y, y_polynomial_predictions))
-    #     r2 = r2_score(Y, y_polynomial_predictions)
-    #     print(f"RMSE: {rmse}")
-    #     print(f"R2: {r2}")
-
-    #     plt.plot(X, Y)
-    #     sort_axis = operator.itemgetter(0)
-    #     sorted_zip = sorted(zip(X, y_polynomial_predictions), key=sort_axis)
-    #     x, y_polynomial_predictions = zip(*sorted_zip)
-    #     plt.plot(x, y_polynomial_predictions, color="m")
-    #     # plt.plot(x, X_upper, color="r")
-    #     # plt.plot(x, X_lower, color="g")
-    #     plt.show()
-    # if __name__ == "__main__":
-
-    # df = pd.read_csv(f"{ROOT}/SB02/SB02_Trial02_norm_spliced.csv", index_col=False)
-
-    # df = df.to_numpy()
-    # values = np.delete(df, 0, 1)
-    # Xaxis, Yaxis = values.T
-    # Xaxis = Xaxis[:, np.newaxis]
-    # Yaxis = Yaxis[:, np.newaxis]
-    # t_cop = t_cop[:, np.newaxis]
-
-    # poly(t_cop, Xaxis)
-    # poly(t_cop, Yaxis)
+    plt.figure()
+    poly(t_cop, avg_x_data, 121, "AP")
+    poly(t_cop, avg_y_data, 122, "ML")
+    plt.show()

@@ -187,7 +187,7 @@ def collect_approx_entropy(ent_list, x):
     ent_list.append(x)
 
 
-def approx_ent(x, win_size, overlap, mult, name):
+def approx_ent(x, win_size, overlap, mult, name) -> list:
     # increase magnitude of signal for more sensitivity in entropy
     x_multiplied = np.multiply(x, mult)
 
@@ -205,23 +205,37 @@ def approx_ent(x, win_size, overlap, mult, name):
         for row in tqdm(range(0, rows))
     )
 
+    variance = []
+    for row in range(0, rows):
+        variance.append(np.var(x_overlap[row]))
+
     # find average approximate entropy
-    avg_entr = np.mean(approx_entropy)
+    # avg_entr = np.mean(approx_entropy)
     # print(f"Average entropy for {name} = {avg_entr}")
 
-    entropy_windows = np.arange(0, rows)
+    # entropy_windows = np.arange(0, rows)
 
-    plot(
-        entropy_windows,
-        approx_entropy,
-        "Window",
-        "Approximate Entropy",
-        f"Moving approximate entropy of {name}",
-        None,
-        [0, 0.4],
-    )
+    # plot(
+    #     entropy_windows,
+    #     approx_entropy,
+    #     "Window",
+    #     "Approximate Entropy",
+    #     f"Moving approximate entropy of {name}",
+    #     None,
+    #     [0, 0.4],
+    # )
 
-    return avg_entr
+    # plot(
+    #     entropy_windows,
+    #     variance,
+    #     "Window",
+    #     "Variance",
+    #     f"Moving Variance of {name}",
+    #     None,
+    #     None,
+    # )
+
+    return approx_entropy
 
 
 def butter_lowpass(cutoff, fs, order=4):
