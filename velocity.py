@@ -6,7 +6,7 @@
 # Description: Processing of the velocity
 #   of COP signals.
 #
-# Last updated: June 29, 2020
+# Last updated: July 3, 2020
 
 # import packages
 import matplotlib.pyplot as plt
@@ -17,7 +17,7 @@ import os
 import statistics
 from scipy.stats import ttest_ind, ttest_ind_from_stats
 
-ROOT = "/Users/natalietipton/Code/center_of_pressure/data"
+ROOT = f"{os.environ.get('HOME')}/Code/center_of_pressure/data"
 
 # constants
 fs_cop = 1200
@@ -37,36 +37,6 @@ if __name__ == "__main__":
         for folder in folders
     ]
 
-    # vel_x_avgs_eotog = []
-    # pow_x_tot_eotog = []
-    # vel_y_avgs_eotog = []
-    # pow_y_tot_eotog = []
-
-    # vel_x_avgs_ectog = []
-    # pow_x_tot_ectog = []
-    # vel_y_avgs_ectog = []
-    # pow_y_tot_ectog = []
-
-    # vel_x_avgs_eodftan = []
-    # pow_x_tot_eodftan = []
-    # vel_y_avgs_eodftan = []
-    # pow_y_tot_eodftan = []
-
-    # vel_x_avgs_ecdftan = []
-    # pow_x_tot_ecdftan = []
-    # vel_y_avgs_ecdftan = []
-    # pow_y_tot_ecdftan = []
-
-    # vel_x_avgs_eodbtan = []
-    # pow_x_tot_eodbtan = []
-    # vel_y_avgs_eodbtan = []
-    # pow_y_tot_eodbtan = []
-
-    # vel_x_avgs_ecdbtan = []
-    # pow_x_tot_ecdbtan = []
-    # vel_y_avgs_ecdbtan = []
-    # pow_y_tot_ecdbtan = []
-
     # create a dictionary showing what filenames are within each folder
     dirs = {}
     for folder_name, file_list in files:
@@ -78,6 +48,13 @@ if __name__ == "__main__":
     # loop through all files in all subdirectories
     for directory in dirs:
         print(directory)
+        x_trial_vel = []
+        y_trial_vel = []
+        x_trial_pow = []
+        y_trial_pow = []
+        trial_cond = []
+
+        # determine if directory is for subject 4
         if int(directory[-1]) == 4:
             sub4 = True
         else:
@@ -121,6 +98,7 @@ if __name__ == "__main__":
 
             # if an EOFT trial
             if number < 7:
+                trial_cond.append("EOFT")
                 # read data
                 df = pd.read_csv(os.path.join(directory, file), index_col=False)
 
@@ -140,6 +118,7 @@ if __name__ == "__main__":
                 # take the average of the first 10 data points from x velocity
                 # (too time expensive to average all points, and this is accurate)
                 vel_x_avgs_eotog.append(np.mean(sorted(vel_x_cop, reverse=True)[:10]))
+                x_trial_vel.append(np.mean(sorted(vel_x_cop, reverse=True)[:10]))
 
                 # calculate autocorrelation and then PSD of velocity of x COP
                 auto_vel_x_cop = np.correlate(vel_x_cop, vel_x_cop, mode="full")
@@ -147,12 +126,14 @@ if __name__ == "__main__":
 
                 # sum up all of the x cop frequency content
                 pow_x_tot_eotog.append(sum(abs(Sxx_vel_cop)))
+                x_trial_pow.append(sum(abs(Sxx_vel_cop)))
 
                 # get the derivative of the y direction COP data
                 vel_y_cop = an.deriv(t_cop, y_cop)
 
                 # take the average of the first 10 data points from x velocity
                 vel_y_avgs_eotog.append(np.mean(sorted(vel_y_cop, reverse=True)[:10]))
+                y_trial_vel.append(np.mean(sorted(vel_y_cop, reverse=True)[:10]))
 
                 # calculate autocorrelation and the PSD of velocity of y COP
                 auto_vel_y_cop = np.correlate(vel_y_cop, vel_y_cop, mode="full")
@@ -160,9 +141,11 @@ if __name__ == "__main__":
 
                 # sum up all of the y cop frequency content
                 pow_y_tot_eotog.append(sum(abs(Syy_vel_cop)))
+                y_trial_pow.append(sum(abs(Syy_vel_cop)))
 
-            # if an ECFT trial
+            # if an ECFT trial: complete same steps as above
             elif 6 < number < 12:
+                trial_cond.append("ECFT")
                 df = pd.read_csv(os.path.join(directory, file), index_col=False)
 
                 df = df.to_numpy()
@@ -175,20 +158,25 @@ if __name__ == "__main__":
 
                 vel_x_cop = an.deriv(t_cop, x_cop)
                 vel_x_avgs_ectog.append(np.mean(sorted(vel_x_cop, reverse=True)[:10]))
+                x_trial_vel.append(np.mean(sorted(vel_x_cop, reverse=True)[:10]))
 
                 auto_vel_x_cop = np.correlate(vel_x_cop, vel_x_cop, mode="full")
                 Sxx_vel_cop = np.fft.fft(auto_vel_x_cop)
                 pow_x_tot_ectog.append(sum(abs(Sxx_vel_cop)))
+                x_trial_pow.append(sum(abs(Sxx_vel_cop)))
 
                 vel_y_cop = an.deriv(t_cop, y_cop)
                 vel_y_avgs_ectog.append(np.mean(sorted(vel_y_cop, reverse=True)[:10]))
+                y_trial_vel.append(np.mean(sorted(vel_y_cop, reverse=True)[:10]))
 
                 auto_vel_y_cop = np.correlate(vel_y_cop, vel_y_cop, mode="full")
                 Syy_vel_cop = np.fft.fft(auto_vel_y_cop)
                 pow_y_tot_ectog.append(sum(abs(Syy_vel_cop)))
+                y_trial_pow.append(sum(abs(Syy_vel_cop)))
 
             # if an EOFTanDB trial
             elif 11 < number < 17:
+                trial_cond.append("EOFTanDB")
                 df = pd.read_csv(os.path.join(directory, file), index_col=False)
 
                 df = df.to_numpy()
@@ -201,20 +189,25 @@ if __name__ == "__main__":
 
                 vel_x_cop = an.deriv(t_cop, x_cop)
                 vel_x_avgs_eodbtan.append(np.mean(sorted(vel_x_cop, reverse=True)[:10]))
+                x_trial_vel.append(np.mean(sorted(vel_x_cop, reverse=True)[:10]))
 
                 auto_vel_x_cop = np.correlate(vel_x_cop, vel_x_cop, mode="full")
                 Sxx_vel_cop = np.fft.fft(auto_vel_x_cop)
                 pow_x_tot_eodbtan.append(sum(abs(Sxx_vel_cop)))
+                x_trial_pow.append(sum(abs(Sxx_vel_cop)))
 
                 vel_y_cop = an.deriv(t_cop, y_cop)
                 vel_y_avgs_eodbtan.append(np.mean(sorted(vel_y_cop, reverse=True)[:10]))
+                y_trial_vel.append(np.mean(sorted(vel_y_cop, reverse=True)[:10]))
 
                 auto_vel_y_cop = np.correlate(vel_y_cop, vel_y_cop, mode="full")
                 Syy_vel_cop = np.fft.fft(auto_vel_y_cop)
                 pow_y_tot_eodbtan.append(sum(abs(Syy_vel_cop)))
+                y_trial_pow.append(sum(abs(Syy_vel_cop)))
 
             # if an ECFTanDB trial
             elif 16 < number < 22:
+                trial_cond.append("ECFTanDB")
                 df = pd.read_csv(os.path.join(directory, file), index_col=False)
 
                 df = df.to_numpy()
@@ -223,20 +216,25 @@ if __name__ == "__main__":
 
                 vel_x_cop = an.deriv(t_cop, x_cop)
                 vel_x_avgs_ecdbtan.append(np.mean(sorted(vel_x_cop, reverse=True)[:10]))
+                x_trial_vel.append(np.mean(sorted(vel_x_cop, reverse=True)[:10]))
 
                 auto_vel_x_cop = np.correlate(vel_x_cop, vel_x_cop, mode="full")
                 Sxx_vel_cop = np.fft.fft(auto_vel_x_cop)
                 pow_x_tot_ecdbtan.append(sum(abs(Sxx_vel_cop)))
+                x_trial_pow.append(sum(abs(Sxx_vel_cop)))
 
                 vel_y_cop = an.deriv(t_cop, y_cop)
                 vel_y_avgs_ecdbtan.append(np.mean(sorted(vel_y_cop, reverse=True)[:10]))
+                y_trial_vel.append(np.mean(sorted(vel_y_cop, reverse=True)[:10]))
 
                 auto_vel_y_cop = np.correlate(vel_y_cop, vel_y_cop, mode="full")
                 Syy_vel_cop = np.fft.fft(auto_vel_y_cop)
                 pow_y_tot_ecdbtan.append(sum(abs(Syy_vel_cop)))
+                y_trial_pow.append(sum(abs(Syy_vel_cop)))
 
             # if an EOFTanDF trial
             elif 21 < number < 27:
+                trial_cond.append("EOFTanDF")
                 df = pd.read_csv(os.path.join(directory, file), index_col=False)
 
                 df = df.to_numpy()
@@ -245,20 +243,25 @@ if __name__ == "__main__":
 
                 vel_x_cop = an.deriv(t_cop, x_cop)
                 vel_x_avgs_eodftan.append(np.mean(sorted(vel_x_cop, reverse=True)[:10]))
+                x_trial_vel.append(np.mean(sorted(vel_x_cop, reverse=True)[:10]))
 
                 auto_vel_x_cop = np.correlate(vel_x_cop, vel_x_cop, mode="full")
                 Sxx_vel_cop = np.fft.fft(auto_vel_x_cop)
                 pow_x_tot_eodftan.append(sum(abs(Sxx_vel_cop)))
+                x_trial_pow.append(sum(abs(Sxx_vel_cop)))
 
                 vel_y_cop = an.deriv(t_cop, y_cop)
                 vel_y_avgs_eodftan.append(np.mean(sorted(vel_y_cop, reverse=True)[:10]))
+                y_trial_vel.append(np.mean(sorted(vel_y_cop, reverse=True)[:10]))
 
                 auto_vel_y_cop = np.correlate(vel_y_cop, vel_y_cop, mode="full")
                 Syy_vel_cop = np.fft.fft(auto_vel_y_cop)
                 pow_y_tot_eodftan.append(sum(abs(Syy_vel_cop)))
+                y_trial_pow.append(sum(abs(Syy_vel_cop)))
 
             #  if an ECFTanDF trial
             elif 26 < number < 32:
+                trial_cond.append("ECFTanDF")
                 df = pd.read_csv(os.path.join(directory, file), index_col=False)
 
                 df = df.to_numpy()
@@ -267,68 +270,29 @@ if __name__ == "__main__":
 
                 vel_x_cop = an.deriv(t_cop, x_cop)
                 vel_x_avgs_ecdftan.append(np.mean(sorted(vel_x_cop, reverse=True)[:10]))
+                x_trial_vel.append(np.mean(sorted(vel_x_cop, reverse=True)[:10]))
 
                 auto_vel_x_cop = np.correlate(vel_x_cop, vel_x_cop, mode="full")
                 Sxx_vel_cop = np.fft.fft(auto_vel_x_cop)
                 pow_x_tot_ecdftan.append(sum(abs(Sxx_vel_cop)))
+                x_trial_pow.append(sum(abs(Sxx_vel_cop)))
 
                 vel_y_cop = an.deriv(t_cop, y_cop)
                 vel_y_avgs_ecdftan.append(np.mean(sorted(vel_y_cop, reverse=True)[:10]))
+                y_trial_vel.append(np.mean(sorted(vel_y_cop, reverse=True)[:10]))
 
                 auto_vel_y_cop = np.correlate(vel_y_cop, vel_y_cop, mode="full")
                 Syy_vel_cop = np.fft.fft(auto_vel_y_cop)
                 pow_y_tot_ecdftan.append(sum(abs(Syy_vel_cop)))
+                y_trial_pow.append(sum(abs(Syy_vel_cop)))
 
-        # p_values_vel_x = []
-        # p_values_vel_y = []
-        # p_values_pow_x = []
-        # p_values_pow_y = []
-
-        # print(vel_x_avgs_eotog)
-
-        # t_stat, p_val = ttest_ind(vel_x_avgs_eotog, vel_x_avgs_ectog, equal_var=False)
-        # p_values_vel_x.append(p_val / 2)
-        # t_stat, p_val = ttest_ind(vel_x_avgs_eotog, vel_x_avgs_eodftan, equal_var=False)
-        # p_values_vel_x.append(p_val / 2)
-        # t_stat, p_val = ttest_ind(vel_x_avgs_eotog, vel_x_avgs_eodbtan, equal_var=False)
-        # p_values_vel_x.append(p_val / 2)
-        # t_stat, p_val = ttest_ind(vel_x_avgs_eotog, vel_x_avgs_ecdftan, equal_var=False)
-        # p_values_vel_x.append(p_val / 2)
-        # t_stat, p_val = ttest_ind(vel_x_avgs_eotog, vel_x_avgs_ecdbtan, equal_var=False)
-        # p_values_vel_x.append(p_val / 2)
-
-        # t_stat, p_val = ttest_ind(pow_x_tot_eotog, pow_x_tot_ectog, equal_var=False)
-        # p_values_pow_x.append(p_val / 2)
-        # t_stat, p_val = ttest_ind(pow_x_tot_eotog, pow_x_tot_eodftan, equal_var=False)
-        # p_values_pow_x.append(p_val / 2)
-        # t_stat, p_val = ttest_ind(pow_x_tot_eotog, pow_x_tot_eodbtan, equal_var=False)
-        # p_values_pow_x.append(p_val / 2)
-        # t_stat, p_val = ttest_ind(pow_x_tot_eotog, pow_x_tot_ecdftan, equal_var=False)
-        # p_values_pow_x.append(p_val / 2)
-        # t_stat, p_val = ttest_ind(pow_x_tot_eotog, pow_x_tot_ecdbtan, equal_var=False)
-        # p_values_pow_x.append(p_val / 2)
-
-        # t_stat, p_val = ttest_ind(vel_y_avgs_eotog, vel_y_avgs_ectog, equal_var=False)
-        # p_values_vel_y.append(p_val / 2)
-        # t_stat, p_val = ttest_ind(vel_y_avgs_eotog, vel_y_avgs_eodftan, equal_var=False)
-        # p_values_vel_y.append(p_val / 2)
-        # t_stat, p_val = ttest_ind(vel_y_avgs_eotog, vel_y_avgs_eodbtan, equal_var=False)
-        # p_values_vel_y.append(p_val / 2)
-        # t_stat, p_val = ttest_ind(vel_y_avgs_eotog, vel_y_avgs_ecdftan, equal_var=False)
-        # p_values_vel_y.append(p_val / 2)
-        # t_stat, p_val = ttest_ind(vel_y_avgs_eotog, vel_y_avgs_ecdbtan, equal_var=False)
-        # p_values_vel_y.append(p_val / 2)
-
-        # t_stat, p_val = ttest_ind(pow_y_tot_eotog, pow_y_tot_ectog, equal_var=False)
-        # p_values_pow_y.append(p_val / 2)
-        # t_stat, p_val = ttest_ind(pow_y_tot_eotog, pow_y_tot_eodftan, equal_var=False)
-        # p_values_pow_y.append(p_val / 2)
-        # t_stat, p_val = ttest_ind(pow_y_tot_eotog, pow_y_tot_eodbtan, equal_var=False)
-        # p_values_pow_y.append(p_val / 2)
-        # t_stat, p_val = ttest_ind(pow_y_tot_eotog, pow_y_tot_ecdftan, equal_var=False)
-        # p_values_pow_y.append(p_val / 2)
-        # t_stat, p_val = ttest_ind(pow_y_tot_eotog, pow_y_tot_ecdbtan, equal_var=False)
-        # p_values_pow_y.append(p_val / 2)
+        zipped = list(
+            zip(x_trial_vel, y_trial_vel, x_trial_pow, y_trial_pow, trial_cond)
+        )
+        df_for_stats = pd.DataFrame(
+            zipped, columns=["xVelocity", "yVelocity", "xPower", "yPower", "condition"]
+        )
+        df_for_stats.to_csv(f"sb{directory[-1]}_velocity_by_condition.csv")
 
         # plot 4 subplots of the average velocity and frequency content
         # in the X and Y directions for each subject and all conditions
@@ -339,86 +303,92 @@ if __name__ == "__main__":
         plt.subplot(141)
 
         # x axis labels
-        x = ["EOFT", "ECFT", "EODF", "EODB", "ECDF", "ECDB"]
+        x = ["EOFT", "ECFT", "EODB", "EODF", "ECDB", "ECDF"]
 
         # y axis data
         vels = [
             np.mean(vel_x_avgs_eotog),
             np.mean(vel_x_avgs_ectog),
-            np.mean(vel_x_avgs_eodftan),
             np.mean(vel_x_avgs_eodbtan),
-            np.mean(vel_x_avgs_ecdftan),
+            np.mean(vel_x_avgs_eodftan),
             np.mean(vel_x_avgs_ecdbtan),
+            np.mean(vel_x_avgs_ecdftan),
+        ]
+
+        # standard error bars
+        error = [
+            np.std(vel_x_avgs_eotog) / np.sqrt(len(vel_x_avgs_eotog)),
+            np.std(vel_x_avgs_ectog) / np.sqrt(len(vel_x_avgs_ectog)),
+            np.std(vel_x_avgs_eodbtan) / np.sqrt(len(vel_x_avgs_eodbtan)),
+            np.std(vel_x_avgs_eodftan) / np.sqrt(len(vel_x_avgs_eodftan)),
+            np.std(vel_x_avgs_ecdbtan) / np.sqrt(len(vel_x_avgs_ecdbtan)),
+            np.std(vel_x_avgs_ecdftan) / np.sqrt(len(vel_x_avgs_ecdftan)),
         ]
 
         # creates an x-axis position for each stability condition
         x_pos = [i for i, _ in enumerate(x)]
 
         # create bars plot with different colors for each
-        plt.bar(x_pos, vels, color="rgbkm")
+        plt.bar(
+            x_pos, vels, yerr=error, capsize=3, color="grbymc",
+        )
 
         # label x axis
         plt.xlabel(
-            "Balance Condition", fontdict={"fontsize": 9},
+            "Balance Condition", fontdict={"fontsize": 11},
         )
 
         # label y axis
         plt.ylabel(
-            "Average Velocity (mm/s)", fontdict={"fontsize": 9},
+            "Average Velocity (mm/s)", fontdict={"fontsize": 11},
         )
-
         # title plot
         plt.title(
-            f"Average Velocity of Each Balance Condition\nin X for Subject {(directory[-1])}",
-            fontdict={"fontsize": 9},
+            f"Average Velocity of Each Balance Condition\nin AP for Subject {(directory[-1])}",
+            fontdict={"fontsize": 11},
         )
 
         # create x-axis ticks
         plt.xticks(x_pos, x)
 
-        # plt.show()
-        # plt.subplot(4,1,2)
-        # plt.style.use("ggplot")
-
-        # x = ["ECFT", "EODF", "EODB", "ECDF", "ECDB"]
-
-        # x_pos = [i for i, _ in enumerate(x)]
-
-        # plt.bar(x_pos, p_values_vel_x, color="blue")
-        # plt.xlabel("Balance Condition")
-        # plt.ylabel("p-value")
-        # plt.title(f"P-values for X velocity for subject {(directory[-1])}")
-
-        # plt.xticks(x_pos, x)
-        # plt.ylim(0, 0.06)
-
-        # plt.show()
         plt.subplot(142)
         plt.style.use("ggplot")
 
-        x = ["EOFT", "ECFT", "EODF", "EODB", "ECDF", "ECDB"]
+        x = ["EOFT", "ECFT", "EODB", "EODF", "ECDB", "ECDF"]
         vels = [
             np.mean(vel_y_avgs_eotog),
             np.mean(vel_y_avgs_ectog),
-            np.mean(vel_y_avgs_eodftan),
             np.mean(vel_y_avgs_eodbtan),
-            np.mean(vel_y_avgs_ecdftan),
+            np.mean(vel_y_avgs_eodftan),
             np.mean(vel_y_avgs_ecdbtan),
+            np.mean(vel_y_avgs_ecdftan),
+        ]
+
+        # standard error bars
+        error = [
+            np.std(vel_y_avgs_eotog) / np.sqrt(len(vel_y_avgs_eotog)),
+            np.std(vel_y_avgs_ectog) / np.sqrt(len(vel_y_avgs_ectog)),
+            np.std(vel_y_avgs_eodbtan) / np.sqrt(len(vel_y_avgs_eodbtan)),
+            np.std(vel_y_avgs_eodftan) / np.sqrt(len(vel_y_avgs_eodftan)),
+            np.std(vel_y_avgs_ecdbtan) / np.sqrt(len(vel_y_avgs_ecdbtan)),
+            np.std(vel_y_avgs_ecdftan) / np.sqrt(len(vel_y_avgs_ecdftan)),
         ]
 
         x_pos = [i for i, _ in enumerate(x)]
 
-        plt.bar(x_pos, vels, color="rgbkm")
+        plt.bar(
+            x_pos, vels, yerr=error, capsize=3, color="grbymc",
+        )
 
         plt.xlabel(
-            "Balance Condition", fontdict={"fontsize": 9},
+            "Balance Condition", fontdict={"fontsize": 11},
         )
         plt.ylabel(
-            "Average Velocity (mm/s)", fontdict={"fontsize": 9},
+            "Average Velocity (mm/s)", fontdict={"fontsize": 11},
         )
         plt.title(
-            f"Average Velocity of Each Balance Condition\nin Y for Subject {(directory[-1])}",
-            fontdict={"fontsize": 9},
+            f"Average Velocity of Each Balance Condition\nin ML for Subject {(directory[-1])}",
+            fontdict={"fontsize": 11},
         )
 
         plt.xticks(x_pos, x)
@@ -426,89 +396,78 @@ if __name__ == "__main__":
         plt.subplot(143)
         plt.style.use("ggplot")
 
-        x = ["EOFT", "ECFT", "EODF", "EODB", "ECDF", "ECDB"]
+        x = ["EOFT", "ECFT", "EODB", "EODF", "ECDB", "ECDF"]
         vels = [
             np.mean(pow_x_tot_eotog),
             np.mean(pow_x_tot_ectog),
-            np.mean(pow_x_tot_eodftan),
             np.mean(pow_x_tot_eodbtan),
-            np.mean(pow_x_tot_ecdftan),
+            np.mean(pow_x_tot_eodftan),
             np.mean(pow_x_tot_ecdbtan),
+            np.mean(pow_x_tot_ecdftan),
+        ]
+
+        # standard error bars
+        error = [
+            np.std(pow_x_tot_eotog) / np.sqrt(len(pow_x_tot_eotog)),
+            np.std(pow_x_tot_ectog) / np.sqrt(len(pow_x_tot_ectog)),
+            np.std(pow_x_tot_eodbtan) / np.sqrt(len(pow_x_tot_eodbtan)),
+            np.std(pow_x_tot_eodftan) / np.sqrt(len(pow_x_tot_eodftan)),
+            np.std(pow_x_tot_ecdbtan) / np.sqrt(len(pow_x_tot_ecdbtan)),
+            np.std(pow_x_tot_ecdftan) / np.sqrt(len(pow_x_tot_ecdftan)),
         ]
 
         x_pos = [i for i, _ in enumerate(x)]
 
-        plt.bar(x_pos, vels, color="rgbkm")
+        plt.bar(x_pos, vels, yerr=error, capsize=3, color="grbymc")
 
         plt.xlabel(
-            "Balance Condition", fontdict={"fontsize": 9},
+            "Balance Condition", fontdict={"fontsize": 11},
         )
         plt.ylabel(
-            "Average Velocity (mm/s)", fontdict={"fontsize": 9},
+            "Magnitude", fontdict={"fontsize": 11},
         )
         plt.title(
-            f"Average Total Power of Each Balance Condition\nin X for Subject {(directory[-1])}",
-            fontdict={"fontsize": 9},
+            f"Average Total Power of Each Balance Condition\nin AP for Subject {(directory[-1])}",
+            fontdict={"fontsize": 11},
         )
 
         plt.xticks(x_pos, x)
 
-        # plt.show()
-        # plt.subplot(4,1,1)
-        # x = ["ECFT", "EODF", "EODB", "ECDF", "ECDB"]
-
-        # x_pos = [i for i, _ in enumerate(x)]
-
-        # plt.bar(x_pos, p_values_pow_x, color="blue")
-        # plt.xlabel("Balance Condition")
-        # plt.ylabel("p-value")
-        # plt.title(f"P-values for X Power for subject {(directory[-1])}")
-
-        # plt.xticks(x_pos, x)
-        # plt.ylim(0, 0.06)
-
-        # plt.show()
-
-        # plt.show()
-
-        # x = ["ECFT", "EODF", "EODB", "ECDF", "ECDB"]
-
-        # x_pos = [i for i, _ in enumerate(x)]
-
-        # plt.bar(x_pos, p_values_vel_y, color="blue")
-        # plt.xlabel("Balance Condition")
-        # plt.ylabel("p-value")
-        # plt.title(f"P-values for Y velocity for subject {(directory[-1])}")
-
-        # plt.xticks(x_pos, x)
-        # plt.ylim(0, 0.06)
-
-        # plt.show()
         plt.subplot(144)
         plt.style.use("ggplot")
 
-        x = ["EOFT", "ECFT", "EODF", "EODB", "ECDF", "ECDB"]
+        x = ["EOFT", "ECFT", "EODB", "EODF", "ECDB", "ECDF"]
         vels = [
             np.mean(pow_y_tot_eotog),
             np.mean(pow_y_tot_ectog),
-            np.mean(pow_y_tot_eodftan),
             np.mean(pow_y_tot_eodbtan),
-            np.mean(pow_y_tot_ecdftan),
+            np.mean(pow_y_tot_eodftan),
             np.mean(pow_y_tot_ecdbtan),
+            np.mean(pow_y_tot_ecdftan),
+        ]
+
+        # standard error bars
+        error = [
+            np.std(pow_y_tot_eotog) / np.sqrt(len(pow_y_tot_eotog)),
+            np.std(pow_y_tot_ectog) / np.sqrt(len(pow_y_tot_ectog)),
+            np.std(pow_y_tot_eodbtan) / np.sqrt(len(pow_y_tot_eodbtan)),
+            np.std(pow_y_tot_eodftan) / np.sqrt(len(pow_y_tot_eodftan)),
+            np.std(pow_y_tot_ecdbtan) / np.sqrt(len(pow_y_tot_ecdbtan)),
+            np.std(pow_y_tot_ecdftan) / np.sqrt(len(pow_y_tot_ecdftan)),
         ]
 
         x_pos = [i for i, _ in enumerate(x)]
 
-        plt.bar(x_pos, vels, color="rgbkm")
+        plt.bar(x_pos, vels, yerr=error, capsize=3, color="grbymc")
         plt.xlabel(
-            "Balance Condition", fontdict={"fontsize": 9},
+            "Balance Condition", fontdict={"fontsize": 11},
         )
         plt.ylabel(
-            "Average Velocity (mm/s)", fontdict={"fontsize": 9},
+            "Magnitude", fontdict={"fontsize": 11},
         )
         plt.title(
-            f"Average Total Power of Each Balance Condition\nin Y for Subject {(directory[-1])}",
-            fontdict={"fontsize": 9},
+            f"Average Total Power of Each Balance Condition\nin ML for Subject {(directory[-1])}",
+            fontdict={"fontsize": 11},
         )
 
         plt.xticks(x_pos, x)
@@ -516,19 +475,180 @@ if __name__ == "__main__":
         # show all four subplots
         plt.show()
 
-        # x = ["ECFT", "EODF", "EODB", "ECDF", "ECDB"]
+        #########################
 
-        # x_pos = [i for i, _ in enumerate(x)]
+        # plot 4 subplots of the average velocity and frequency content
+        # in the X and Y directions for each subject and all conditions
+        plt.figure()
 
-        # plt.bar(x_pos, p_values_pow_y, color="blue")
-        # plt.xlabel("Balance Condition")
-        # plt.ylabel("p-value")
-        # plt.title(f"P-values for Y power for subject {(directory[-1])}")
+        # style of plots
+        plt.style.use("ggplot")
+        plt.subplot(141)
 
-        # plt.xticks(x_pos, x)
-        # plt.ylim(0, 0.06)
+        # x axis labels
+        x = ["ECFT", "EODB", "EODF", "ECDB", "ECDF"]
 
-        # plt.show()
+        # y axis data
+        vels = [
+            np.mean(vel_x_avgs_ectog) - np.mean(vel_x_avgs_eotog),
+            np.mean(vel_x_avgs_eodbtan) - np.mean(vel_x_avgs_eotog),
+            np.mean(vel_x_avgs_eodftan) - np.mean(vel_x_avgs_eotog),
+            np.mean(vel_x_avgs_ecdbtan) - np.mean(vel_x_avgs_eotog),
+            np.mean(vel_x_avgs_ecdftan) - np.mean(vel_x_avgs_eotog),
+        ]
+
+        # standard error bars
+        error = [
+            np.std(vel_x_avgs_ectog) / np.sqrt(len(vel_x_avgs_ectog)),
+            np.std(vel_x_avgs_eodbtan) / np.sqrt(len(vel_x_avgs_eodbtan)),
+            np.std(vel_x_avgs_eodftan) / np.sqrt(len(vel_x_avgs_eodftan)),
+            np.std(vel_x_avgs_ecdbtan) / np.sqrt(len(vel_x_avgs_ecdbtan)),
+            np.std(vel_x_avgs_ecdftan) / np.sqrt(len(vel_x_avgs_ecdftan)),
+        ]
+
+        # creates an x-axis position for each stability condition
+        x_pos = [i for i, _ in enumerate(x)]
+
+        # create bars plot with different colors for each
+        plt.bar(
+            x_pos, vels, yerr=error, capsize=3, color="rbymc",
+        )
+
+        # label x axis
+        plt.xlabel(
+            "Balance Condition", fontdict={"fontsize": 11},
+        )
+
+        # label y axis
+        plt.ylabel(
+            "Velocity Difference (mm/s)", fontdict={"fontsize": 11},
+        )
+        # title plot
+        plt.title(
+            f"Difference in velocity from EOFT condition\nin AP for Subject {(directory[-1])}",
+            fontdict={"fontsize": 11},
+        )
+
+        # create x-axis ticks
+        plt.xticks(x_pos, x)
+
+        plt.subplot(142)
+        plt.style.use("ggplot")
+
+        x = ["ECFT", "EODB", "EODF", "ECDB", "ECDF"]
+        vels = [
+            np.mean(vel_y_avgs_ectog) - np.mean(vel_y_avgs_eotog),
+            np.mean(vel_y_avgs_eodbtan) - np.mean(vel_y_avgs_eotog),
+            np.mean(vel_y_avgs_eodftan) - np.mean(vel_y_avgs_eotog),
+            np.mean(vel_y_avgs_ecdbtan) - np.mean(vel_y_avgs_eotog),
+            np.mean(vel_y_avgs_ecdftan) - np.mean(vel_y_avgs_eotog),
+        ]
+
+        # standard error bars
+        error = [
+            np.std(vel_y_avgs_ectog) / np.sqrt(len(vel_y_avgs_ectog)),
+            np.std(vel_y_avgs_eodbtan) / np.sqrt(len(vel_y_avgs_eodbtan)),
+            np.std(vel_y_avgs_eodftan) / np.sqrt(len(vel_y_avgs_eodftan)),
+            np.std(vel_y_avgs_ecdbtan) / np.sqrt(len(vel_y_avgs_ecdbtan)),
+            np.std(vel_y_avgs_ecdftan) / np.sqrt(len(vel_y_avgs_ecdftan)),
+        ]
+
+        x_pos = [i for i, _ in enumerate(x)]
+
+        plt.bar(
+            x_pos, vels, yerr=error, capsize=3, color="rbymc",
+        )
+
+        plt.xlabel(
+            "Balance Condition", fontdict={"fontsize": 11},
+        )
+        plt.ylabel(
+            "Velocity Difference (mm/s)", fontdict={"fontsize": 11},
+        )
+        plt.title(
+            f"Difference in velocity form EOFT condition\nin ML for Subject {(directory[-1])}",
+            fontdict={"fontsize": 11},
+        )
+
+        plt.xticks(x_pos, x)
+
+        plt.subplot(143)
+        plt.style.use("ggplot")
+
+        x = ["ECFT", "EODB", "EODF", "ECDB", "ECDF"]
+        vels = [
+            np.mean(pow_x_tot_ectog) - np.mean(pow_x_tot_eotog),
+            np.mean(pow_x_tot_eodbtan) - np.mean(pow_x_tot_eotog),
+            np.mean(pow_x_tot_eodftan) - np.mean(pow_x_tot_eotog),
+            np.mean(pow_x_tot_ecdbtan) - np.mean(pow_x_tot_eotog),
+            np.mean(pow_x_tot_ecdftan) - np.mean(pow_x_tot_eotog),
+        ]
+
+        # standard error bars
+        error = [
+            np.std(pow_x_tot_ectog) / np.sqrt(len(pow_x_tot_ectog)),
+            np.std(pow_x_tot_eodbtan) / np.sqrt(len(pow_x_tot_eodbtan)),
+            np.std(pow_x_tot_eodftan) / np.sqrt(len(pow_x_tot_eodftan)),
+            np.std(pow_x_tot_ecdbtan) / np.sqrt(len(pow_x_tot_ecdbtan)),
+            np.std(pow_x_tot_ecdftan) / np.sqrt(len(pow_x_tot_ecdftan)),
+        ]
+
+        x_pos = [i for i, _ in enumerate(x)]
+
+        plt.bar(x_pos, vels, yerr=error, capsize=3, color="rbymc")
+
+        plt.xlabel(
+            "Balance Condition", fontdict={"fontsize": 11},
+        )
+        plt.ylabel(
+            "Power Difference", fontdict={"fontsize": 11},
+        )
+        plt.title(
+            f"Difference in total power from EOFT condition\nin AP for Subject {(directory[-1])}",
+            fontdict={"fontsize": 11},
+        )
+
+        plt.xticks(x_pos, x)
+
+        plt.subplot(144)
+        plt.style.use("ggplot")
+
+        x = ["ECFT", "EODB", "EODF", "ECDB", "ECDF"]
+        vels = [
+            np.mean(pow_y_tot_ectog) - np.mean(pow_y_tot_eotog),
+            np.mean(pow_y_tot_eodbtan) - np.mean(pow_y_tot_eotog),
+            np.mean(pow_y_tot_eodftan) - np.mean(pow_y_tot_eotog),
+            np.mean(pow_y_tot_ecdbtan) - np.mean(pow_y_tot_eotog),
+            np.mean(pow_y_tot_ecdftan) - np.mean(pow_y_tot_eotog),
+        ]
+
+        # standard error bars
+        error = [
+            np.std(pow_y_tot_ectog) / np.sqrt(len(pow_y_tot_ectog)),
+            np.std(pow_y_tot_eodbtan) / np.sqrt(len(pow_y_tot_eodbtan)),
+            np.std(pow_y_tot_eodftan) / np.sqrt(len(pow_y_tot_eodftan)),
+            np.std(pow_y_tot_ecdbtan) / np.sqrt(len(pow_y_tot_ecdbtan)),
+            np.std(pow_y_tot_ecdftan) / np.sqrt(len(pow_y_tot_ecdftan)),
+        ]
+
+        x_pos = [i for i, _ in enumerate(x)]
+
+        plt.bar(x_pos, vels, yerr=error, capsize=3, color="rbymc")
+        plt.xlabel(
+            "Balance Condition", fontdict={"fontsize": 11},
+        )
+        plt.ylabel(
+            "Power Difference", fontdict={"fontsize": 11},
+        )
+        plt.title(
+            f"Difference in total power from EOFT condition\nin ML for Subject {(directory[-1])}",
+            fontdict={"fontsize": 11},
+        )
+
+        plt.xticks(x_pos, x)
+
+        # show all four subplots
+        plt.show()
 
         #########################
 

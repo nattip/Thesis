@@ -8,7 +8,7 @@
 #   in one .csv file for all x and another
 #   for all y
 #
-# Last updated:July 13, 2020
+# Last updated: July 3, 2020
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D

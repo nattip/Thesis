@@ -26,7 +26,7 @@ from scipy import signal
 fs_cop = 1200
 t_cop = np.arange(0, 30, 1 / fs_cop)
 
-filepath = "/Users/natalietipton/Code/center_of_pressure/data/SB01/SB01_Trial22_norm_spliced.csv"
+filepath = "/Users/natalietipton/Code/center_of_pressure/data/SB01/SB01_Trial27_norm_spliced.csv"
 
 
 #####################################################################################
@@ -75,25 +75,25 @@ if __name__ == "__main__":
     plt.xlabel("Time (s)")
     plt.ylabel("Magnitude")
     plt.show()
-#################
-# an.plot(t_cop, x_cop, "Time (s)", "COP", "Raw COP data in AP direction", None, None)
+    #################
+    # an.plot(t_cop, x_cop, "Time (s)", "COP", "Raw COP data in AP direction", None, None)
 
-# vel_x_cop = an.deriv(t_cop, x_cop)
-# vel_y_cop = an.deriv(t_cop, y_cop)
-# acc_x_cop = an.deriv(t_cop[:-1], vel_x_cop)
+    vel_x_cop = an.deriv(t_cop, x_cop)
+    vel_y_cop = an.deriv(t_cop, y_cop)
+    acc_x_cop = an.deriv(t_cop[:-1], vel_x_cop)
 
-# plt.figure()
-# plt.subplot(121)
-# plt.plot(t_cop[:-1], vel_x_cop)
-# plt.title("COP Velocity in AP direction for\nbaseline EOFT trial")
-# plt.xlabel("Time (s)")
-# plt.ylabel("Velocity")
-# plt.subplot(122)
-# plt.plot(t_cop[:-1], vel_y_cop)
-# plt.title("COP Velocity in ML direction for\nbaseline EOFT trial")
-# plt.xlabel("Time (s)")
-# plt.ylabel("Velocity")
-# plt.show()
+    plt.figure()
+    plt.subplot(121)
+    plt.plot(t_cop[:-1], vel_x_cop)
+    plt.title("COP Velocity in AP direction for\nbaseline ECFTanDF trial")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Velocity (mm/s)")
+    plt.subplot(122)
+    plt.plot(t_cop[:-1], vel_y_cop)
+    plt.title("COP Velocity in ML direction for\nbaseline ECFTanDF trial")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Velocity (mm/s)")
+    plt.show()
 
 # print(
 #     f"Average velocity of X CoP = {np.mean(sorted(vel_x_cop, reverse=True)[:10])}"
