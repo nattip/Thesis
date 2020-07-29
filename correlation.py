@@ -30,13 +30,6 @@ fs_cop = 1200
 t_com = np.arange(0, 30, 1 / fs_com)
 t_cop = np.arange(0, 30, 1 / fs_cop)
 
-corr_dict = {}
-eoft = []
-ecft = []
-eoftandb = []
-eoftandf = []
-ecftandb = []
-ecftandf = []
 #####################################################################################
 
 if __name__ == "__main__":
@@ -46,6 +39,14 @@ if __name__ == "__main__":
 
     x_com = pd.read_csv("x_com.csv", index_col=False)
     y_com = pd.read_csv("y_com.csv", index_col=False)
+
+    corr_dict = {}
+    eoft = []
+    ecft = []
+    eoftandb = []
+    eoftandf = []
+    ecftandb = []
+    ecftandf = []
 
     # cycle through each column in x file
     for col in x_cop.columns:
@@ -66,6 +67,10 @@ if __name__ == "__main__":
             cop_sig_resample.append(cop_sig[i * 10])
 
         corr, _ = pearsonr(cop_sig_resample, com_sig)
+        auto_corr = np.correlate(cop_sig_resample, cop_sig_resample, mode="full")
+        cross_corr = np.correlate(cop_sig_resample, com_sig, mode="full")
+
+        t_corr = np.arange(-n_com / fs_com, n_com / fs_com - 1 / fs_com, 1 / fs_com)
 
         if number < 7:
             eoft.append(corr)
@@ -87,41 +92,83 @@ if __name__ == "__main__":
         corr_dict["EOFTanDF"] = eoftandf
         corr_dict["ECFTanDF"] = ecftandf
 
+        if subject == 1 and number == 2:
+            plt.figure()
+            plt.subplot(121)
+            plt.plot(t_corr, auto_corr, color="r")
+            plt.plot(t_corr, cross_corr)
+            plt.title(
+                "Autocorrelation of COP and Cross-Correlation of COP/COM\nin AP direction for EOFT trial"
+            )
+            plt.xlabel("Time (s)")
+            plt.ylabel("Magnitude")
+            plt.legend(["Auto", "Cross"])
+
     corr_df = pd.DataFrame(corr_dict, columns=corr_dict.keys())
-    corr_df.to_csv("correlations.csv")
+    corr_df.to_csv("x_correlations.csv")
 
-    # auto_corr = np.correlate(cop_sig_resample, cop_sig_resample, mode="full")
-    # cross_corr = np.correlate(cop_sig_resample, com_sig, mode="full")
+    corr_dict = {}
+    eoft = []
+    ecft = []
+    eoftandb = []
+    eoftandf = []
+    ecftandb = []
+    ecftandf = []
 
-    # auto_corr = an.standardize(auto_corr)
-    # cross_corr = an.standardize(cross_corr)
+    for col in y_cop.columns:
+        print(col)
+        # determine the subject and trial number for column
 
-    # diff = np.subtract(auto_corr, cross_corr)
+        number = int(col[10:12])
+        subject = int(col[2:4])
 
-    # # t_stat, p_val = ttest_ind(auto_corr, cross_corr)
-    # # print(p_val)
+        # turn column of df into a list
+        cop_sig = y_cop[col].to_list()
+        com_sig = y_com[col].to_list()
 
-    # an.plot(
-    #     t_corr,
-    #     diff,
-    #     "time (s)",
-    #     "diff",
-    #     "X CoM and X CoP cross correlation",
-    #     [0, 30],
-    #     None,
-    # )
+        n_com = len(com_sig)
+        t_corr = np.arange(-n_com / fs_com, n_com / fs_com - 1 / fs_com, 1 / fs_com)
 
-    # plt.figure()
-    # plt.plot(t_corr, auto_corr)
-    # plt.plot(t_corr, cross_corr)
-    # plt.xlim([0, 30])
-    # plt.show()
+        cop_sig_resample = []
+        for i in range(0, n_com):
+            cop_sig_resample.append(cop_sig[i * 10])
 
-    # an.plot(
-    #     t_corr, auto_corr, "time (s)", "diff", "auto", [0, 30], None,
-    # )
+        corr, _ = pearsonr(cop_sig_resample, com_sig)
+        auto_corr = np.correlate(cop_sig_resample, cop_sig_resample, mode="full")
+        cross_corr = np.correlate(cop_sig_resample, com_sig, mode="full")
 
-    # an.plot(
-    #     t_corr, cross_corr, "time (s)", "diff", "cross", [0, 30], None,
-    # )
+        if number < 7:
+            eoft.append(corr)
+        elif 6 < number < 12:
+            ecft.append(corr)
+        elif 11 < number < 17:
+            eoftandb.append(corr)
+        elif 16 < number < 22:
+            ecftandb.append(corr)
+        elif 21 < number < 27:
+            eoftandf.append(corr)
+        elif 26 < number < 32:
+            ecftandf.append(corr)
+
+        corr_dict["EOFT"] = eoft
+        corr_dict["ECFT"] = ecft
+        corr_dict["EOFTanDB"] = eoftandb
+        corr_dict["ECFTanDB"] = ecftandb
+        corr_dict["EOFTanDF"] = eoftandf
+        corr_dict["ECFTanDF"] = ecftandf
+
+        if subject == 1 and number == 2:
+            plt.subplot(122)
+            plt.plot(t_corr, auto_corr, color="r")
+            plt.plot(t_corr, cross_corr)
+            plt.title(
+                "Autocorrelation of COP and Cross-Correlation of COP/COM\nin ML direction for EOFT trial"
+            )
+            plt.xlabel("Time (s)")
+            plt.ylabel("Magnitude")
+            plt.legend(["Auto", "Cross"])
+            plt.show()
+
+    corr_df = pd.DataFrame(corr_dict, columns=corr_dict.keys())
+    corr_df.to_csv("y_correlations.csv")
 

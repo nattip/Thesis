@@ -720,7 +720,7 @@ if __name__ == "__main__":
     )
     # title plot
     plt.title(
-        f"Average ApEn of Each Balance Condition\nin AP for Subject 4",
+        f"Average ApEn of Each Balance Condition\nin AP for Subject 3",
         fontdict={"fontsize": 11},
     )
     # # create x-axis ticks
@@ -766,7 +766,7 @@ if __name__ == "__main__":
     )
     # title plot
     plt.title(
-        f"Average ApEn of Each Balance Condition\nin ML for Subject 4",
+        f"Average ApEn of Each Balance Condition\nin ML for Subject 3",
         fontdict={"fontsize": 11},
     )
     # # create x-axis ticks
@@ -816,7 +816,7 @@ if __name__ == "__main__":
     )
     # title plot
     plt.title(
-        f"Difference in ApEn from EOFT condition\nin AP for Subject 4",
+        f"Difference in ApEn from EOFT condition\nin AP for Subject 3",
         fontdict={"fontsize": 11},
     )
     # # create x-axis ticks
@@ -860,7 +860,7 @@ if __name__ == "__main__":
     )
     # title plot
     plt.title(
-        f"Difference in ApEn between EOFT condition\nin ML for Subject 4",
+        f"Difference in ApEn between EOFT condition\nin ML for Subject 3",
         fontdict={"fontsize": 11},
     )
     # # create x-axis ticks
@@ -973,7 +973,7 @@ if __name__ == "__main__":
     )
     # title plot
     plt.title(
-        f"Average ApEn of Each Balance Condition\nin AP for Subject 5",
+        f"Average ApEn of Each Balance Condition\nin AP for Subject 4",
         fontdict={"fontsize": 11},
     )
     # # create x-axis ticks
@@ -1019,7 +1019,7 @@ if __name__ == "__main__":
     )
     # title plot
     plt.title(
-        f"Average ApEn of Each Balance Condition\nin ML for Subject 5",
+        f"Average ApEn of Each Balance Condition\nin ML for Subject 4",
         fontdict={"fontsize": 11},
     )
     # # create x-axis ticks
@@ -1068,7 +1068,7 @@ if __name__ == "__main__":
     )
     # title plot
     plt.title(
-        f"Difference in ApEn from EOFT condition\nin AP for Subject 5",
+        f"Difference in ApEn from EOFT condition\nin AP for Subject 4",
         fontdict={"fontsize": 11},
     )
     # # create x-axis ticks
@@ -1136,6 +1136,259 @@ if __name__ == "__main__":
     zipped = list(zip(x_trial_ent, y_trial_ent, trial_cond))
     df_for_stats = pd.DataFrame(zipped, columns=["xEntropy", "yEntropy", "condition"])
     df_for_stats.to_csv(f"sb6_entropy_by_condition.csv")
+
+    plt.figure()
+
+    # style of plots
+    plt.style.use("ggplot")
+    plt.subplot(121)
+
+    # x axis labels
+    x = ["EOFT", "ECFT", "EODB", "EODF", "ECDB", "ECDF"]
+
+    # y axis data
+    ents = [
+        np.mean(x_eoft_ent),
+        np.mean(x_ecft_ent),
+        np.mean(x_eoftandb_ent),
+        np.mean(x_eoftandf_ent),
+        np.mean(x_ecftandb_ent),
+        np.mean(x_ecftandf_ent),
+    ]
+
+    # standard error bars
+    error = [
+        np.std(x_eoft_ent) / np.sqrt(len(x_eoft_ent)),
+        np.std(x_ecft_ent) / np.sqrt(len(x_ecft_ent)),
+        np.std(x_eoftandb_ent) / np.sqrt(len(x_eoftandb_ent)),
+        np.std(x_eoftandf_ent) / np.sqrt(len(x_eoftandf_ent)),
+        np.std(x_ecftandb_ent) / np.sqrt(len(x_ecftandb_ent)),
+        np.std(x_ecftandf_ent) / np.sqrt(len(x_ecftandf_ent)),
+    ]
+
+    # creates an x-axis position for each stability condition
+    x_pos = [i for i, _ in enumerate(x)]
+    # create bars plot with different colors for each
+    plt.bar(x_pos, ents, yerr=error, capsize=3, color="grbymc")
+    # label x axis
+    plt.xlabel(
+        "Balance Condition", fontdict={"fontsize": 11},
+    )
+    # label y axis
+    plt.ylabel(
+        "Average Approximate Entropy", fontdict={"fontsize": 11},
+    )
+    # title plot
+    plt.title(
+        f"Average ApEn of Each Balance Condition\nin AP for Subject 5",
+        fontdict={"fontsize": 11},
+    )
+    # # create x-axis ticks
+    plt.xticks(x_pos, x)
+
+    plt.style.use("ggplot")
+    plt.subplot(122)
+
+    # x axis labels
+    x = ["EOFT", "ECFT", "EODB", "EODF", "ECDB", "ECDF"]
+
+    # y axis data
+    ents = [
+        np.mean(y_eoft_ent),
+        np.mean(y_ecft_ent),
+        np.mean(y_eoftandb_ent),
+        np.mean(y_eoftandf_ent),
+        np.mean(y_ecftandb_ent),
+        np.mean(y_ecftandf_ent),
+    ]
+
+    # standard error bars
+    error = [
+        np.std(y_eoft_ent) / np.sqrt(len(y_eoft_ent)),
+        np.std(y_ecft_ent) / np.sqrt(len(y_ecft_ent)),
+        np.std(y_eoftandb_ent) / np.sqrt(len(y_eoftandb_ent)),
+        np.std(y_eoftandf_ent) / np.sqrt(len(y_eoftandf_ent)),
+        np.std(y_ecftandb_ent) / np.sqrt(len(y_ecftandb_ent)),
+        np.std(y_ecftandf_ent) / np.sqrt(len(y_ecftandf_ent)),
+    ]
+
+    # creates an x-axis position for each stability condition
+    x_pos = [i for i, _ in enumerate(x)]
+    # create bars plot with different colors for each
+    plt.bar(x_pos, ents, yerr=error, capsize=3, color="grbymc")
+    # label x axis
+    plt.xlabel(
+        "Balance Condition", fontdict={"fontsize": 11},
+    )
+    # label y axis
+    plt.ylabel(
+        "Average Approximate Entropy", fontdict={"fontsize": 11},
+    )
+    # title plot
+    plt.title(
+        f"Average ApEn of Each Balance Condition\nin ML for Subject 5",
+        fontdict={"fontsize": 11},
+    )
+    # # create x-axis ticks
+    plt.xticks(x_pos, x)
+
+    plt.show()
+
+    # create new figure to plot 2 subplots
+    plt.figure()
+
+    # style of plots
+    plt.style.use("ggplot")
+    plt.subplot(121)
+
+    # x axis labels
+    x = ["ECFT", "EODB", "EODF", "ECDB", "ECDF"]
+
+    # y axis data
+    ents = [
+        np.mean(x_ecft_ent) - np.mean(x_eoft_ent),
+        np.mean(x_eoftandb_ent) - np.mean(x_eoft_ent),
+        np.mean(x_eoftandf_ent) - np.mean(x_eoft_ent),
+        np.mean(x_ecftandb_ent) - np.mean(x_eoft_ent),
+        np.mean(x_ecftandf_ent) - np.mean(x_eoft_ent),
+    ]
+
+    # standard error bars
+    error = [
+        np.std(x_ecft_ent) / np.sqrt(len(x_ecft_ent)),
+        np.std(x_eoftandb_ent) / np.sqrt(len(x_eoftandb_ent)),
+        np.std(x_eoftandf_ent) / np.sqrt(len(x_eoftandf_ent)),
+        np.std(x_ecftandb_ent) / np.sqrt(len(x_ecftandb_ent)),
+        np.std(x_ecftandf_ent) / np.sqrt(len(x_ecftandf_ent)),
+    ]
+
+    # creates an x-axis position for each stability condition
+    x_pos = [i for i, _ in enumerate(x)]
+    # create bars plot with different colors for each
+    plt.bar(x_pos, ents, yerr=error, capsize=3, color="rbymc")
+    # label x axis
+    plt.xlabel(
+        "Balance Condition", fontdict={"fontsize": 11},
+    )
+    # label y axis
+    plt.ylabel(
+        "ApEn Difference", fontdict={"fontsize": 11},
+    )
+    # title plot
+    plt.title(
+        f"Difference in ApEn from EOFT condition\nin AP for Subject 5",
+        fontdict={"fontsize": 11},
+    )
+    # # create x-axis ticks
+    plt.xticks(x_pos, x)
+
+    plt.style.use("ggplot")
+    plt.subplot(122)
+
+    # x axis labels
+    x = ["ECFT", "EODB", "EODF", "ECDB", "ECDF"]
+
+    # y axis data
+    ents = [
+        np.mean(y_ecft_ent) - np.mean(y_eoft_ent),
+        np.mean(y_eoftandb_ent) - np.mean(y_eoft_ent),
+        np.mean(y_eoftandf_ent) - np.mean(y_eoft_ent),
+        np.mean(y_ecftandb_ent) - np.mean(y_eoft_ent),
+        np.mean(y_ecftandf_ent) - np.mean(y_eoft_ent),
+    ]
+
+    # standard error bars
+    error = [
+        np.std(y_ecft_ent) / np.sqrt(len(y_ecft_ent)),
+        np.std(y_eoftandb_ent) / np.sqrt(len(y_eoftandb_ent)),
+        np.std(y_eoftandf_ent) / np.sqrt(len(y_eoftandf_ent)),
+        np.std(y_ecftandb_ent) / np.sqrt(len(y_ecftandb_ent)),
+        np.std(y_ecftandf_ent) / np.sqrt(len(y_ecftandf_ent)),
+    ]
+
+    # creates an x-axis position for each stability condition
+    x_pos = [i for i, _ in enumerate(x)]
+    # create bars plot with different colors for each
+    plt.bar(x_pos, ents, yerr=error, capsize=3, color="rbymc")
+    # label x axis
+    plt.xlabel(
+        "Balance Condition", fontdict={"fontsize": 11},
+    )
+    # label y axis
+    plt.ylabel(
+        "ApEn Difference", fontdict={"fontsize": 11},
+    )
+    # title plot
+    plt.title(
+        f"Difference in ApEn between EOFT condition\nin ML for Subject 5",
+        fontdict={"fontsize": 11},
+    )
+    # # create x-axis ticks
+    plt.xticks(x_pos, x)
+
+    plt.show()
+
+    ####################### Subject 8 #########################
+
+    x_eoft_ent = []
+    x_ecft_ent = []
+    x_eoftandb_ent = []
+    x_ecftandb_ent = []
+    x_eoftandf_ent = []
+    x_ecftandf_ent = []
+
+    y_eoft_ent = []
+    y_ecft_ent = []
+    y_eoftandb_ent = []
+    y_ecftandb_ent = []
+    y_eoftandf_ent = []
+    y_ecftandf_ent = []
+
+    x_trial_ent = []
+    y_trial_ent = []
+    trial_cond = []
+
+    for trial in sb08_x.keys():
+        if trial < 7:
+            trial_cond.append("EOFT")
+            x_eoft_ent.append(np.mean(sb08_x[trial]))
+            y_eoft_ent.append(np.mean(sb08_y[trial]))
+            x_trial_ent.append(np.mean(sb08_x[trial]))
+            y_trial_ent.append(np.mean(sb08_y[trial]))
+        elif 6 < trial < 12:
+            trial_cond.append("ECFT")
+            x_ecft_ent.append(np.mean(sb08_x[trial]))
+            y_ecft_ent.append(np.mean(sb08_y[trial]))
+            x_trial_ent.append(np.mean(sb08_x[trial]))
+            y_trial_ent.append(np.mean(sb08_y[trial]))
+        elif 11 < trial < 17:
+            trial_cond.append("EOFTanDB")
+            x_eoftandb_ent.append(np.mean(sb08_x[trial]))
+            y_eoftandb_ent.append(np.mean(sb08_y[trial]))
+            x_trial_ent.append(np.mean(sb08_x[trial]))
+            y_trial_ent.append(np.mean(sb08_y[trial]))
+        elif 16 < trial < 22:
+            trial_cond.append("ECFTanDB")
+            x_ecftandb_ent.append(np.mean(sb08_x[trial]))
+            y_ecftandb_ent.append(np.mean(sb08_y[trial]))
+            x_trial_ent.append(np.mean(sb08_x[trial]))
+            y_trial_ent.append(np.mean(sb08_y[trial]))
+        elif 21 < trial < 27:
+            trial_cond.append("EOFTanDF")
+            x_eoftandf_ent.append(np.mean(sb08_x[trial]))
+            y_eoftandf_ent.append(np.mean(sb08_y[trial]))
+            x_trial_ent.append(np.mean(sb08_x[trial]))
+            y_trial_ent.append(np.mean(sb08_y[trial]))
+        elif 26 < trial < 32:
+            trial_cond.append("ECFTanDF")
+            x_ecftandf_ent.append(np.mean(sb08_x[trial]))
+            y_ecftandf_ent.append(np.mean(sb08_y[trial]))
+            x_trial_ent.append(np.mean(sb08_x[trial]))
+            y_trial_ent.append(np.mean(sb08_y[trial]))
+
+    zipped = list(zip(x_trial_ent, y_trial_ent, trial_cond))
+    df_for_stats = pd.DataFrame(zipped, columns=["xEntropy", "yEntropy", "condition"])
+    df_for_stats.to_csv(f"sb8_entropy_by_condition.csv")
 
     plt.figure()
 
@@ -1321,259 +1574,6 @@ if __name__ == "__main__":
     # title plot
     plt.title(
         f"Difference in ApEn between EOFT condition\nin ML for Subject 6",
-        fontdict={"fontsize": 11},
-    )
-    # # create x-axis ticks
-    plt.xticks(x_pos, x)
-
-    plt.show()
-
-    ####################### Subject 8 #########################
-
-    x_eoft_ent = []
-    x_ecft_ent = []
-    x_eoftandb_ent = []
-    x_ecftandb_ent = []
-    x_eoftandf_ent = []
-    x_ecftandf_ent = []
-
-    y_eoft_ent = []
-    y_ecft_ent = []
-    y_eoftandb_ent = []
-    y_ecftandb_ent = []
-    y_eoftandf_ent = []
-    y_ecftandf_ent = []
-
-    x_trial_ent = []
-    y_trial_ent = []
-    trial_cond = []
-
-    for trial in sb08_x.keys():
-        if trial < 7:
-            trial_cond.append("EOFT")
-            x_eoft_ent.append(np.mean(sb08_x[trial]))
-            y_eoft_ent.append(np.mean(sb08_y[trial]))
-            x_trial_ent.append(np.mean(sb08_x[trial]))
-            y_trial_ent.append(np.mean(sb08_y[trial]))
-        elif 6 < trial < 12:
-            trial_cond.append("ECFT")
-            x_ecft_ent.append(np.mean(sb08_x[trial]))
-            y_ecft_ent.append(np.mean(sb08_y[trial]))
-            x_trial_ent.append(np.mean(sb08_x[trial]))
-            y_trial_ent.append(np.mean(sb08_y[trial]))
-        elif 11 < trial < 17:
-            trial_cond.append("EOFTanDB")
-            x_eoftandb_ent.append(np.mean(sb08_x[trial]))
-            y_eoftandb_ent.append(np.mean(sb08_y[trial]))
-            x_trial_ent.append(np.mean(sb08_x[trial]))
-            y_trial_ent.append(np.mean(sb08_y[trial]))
-        elif 16 < trial < 22:
-            trial_cond.append("ECFTanDB")
-            x_ecftandb_ent.append(np.mean(sb08_x[trial]))
-            y_ecftandb_ent.append(np.mean(sb08_y[trial]))
-            x_trial_ent.append(np.mean(sb08_x[trial]))
-            y_trial_ent.append(np.mean(sb08_y[trial]))
-        elif 21 < trial < 27:
-            trial_cond.append("EOFTanDF")
-            x_eoftandf_ent.append(np.mean(sb08_x[trial]))
-            y_eoftandf_ent.append(np.mean(sb08_y[trial]))
-            x_trial_ent.append(np.mean(sb08_x[trial]))
-            y_trial_ent.append(np.mean(sb08_y[trial]))
-        elif 26 < trial < 32:
-            trial_cond.append("ECFTanDF")
-            x_ecftandf_ent.append(np.mean(sb08_x[trial]))
-            y_ecftandf_ent.append(np.mean(sb08_y[trial]))
-            x_trial_ent.append(np.mean(sb08_x[trial]))
-            y_trial_ent.append(np.mean(sb08_y[trial]))
-
-    zipped = list(zip(x_trial_ent, y_trial_ent, trial_cond))
-    df_for_stats = pd.DataFrame(zipped, columns=["xEntropy", "yEntropy", "condition"])
-    df_for_stats.to_csv(f"sb8_entropy_by_condition.csv")
-
-    plt.figure()
-
-    # style of plots
-    plt.style.use("ggplot")
-    plt.subplot(121)
-
-    # x axis labels
-    x = ["EOFT", "ECFT", "EODB", "EODF", "ECDB", "ECDF"]
-
-    # y axis data
-    ents = [
-        np.mean(x_eoft_ent),
-        np.mean(x_ecft_ent),
-        np.mean(x_eoftandb_ent),
-        np.mean(x_eoftandf_ent),
-        np.mean(x_ecftandb_ent),
-        np.mean(x_ecftandf_ent),
-    ]
-
-    # standard error bars
-    error = [
-        np.std(x_eoft_ent) / np.sqrt(len(x_eoft_ent)),
-        np.std(x_ecft_ent) / np.sqrt(len(x_ecft_ent)),
-        np.std(x_eoftandb_ent) / np.sqrt(len(x_eoftandb_ent)),
-        np.std(x_eoftandf_ent) / np.sqrt(len(x_eoftandf_ent)),
-        np.std(x_ecftandb_ent) / np.sqrt(len(x_ecftandb_ent)),
-        np.std(x_ecftandf_ent) / np.sqrt(len(x_ecftandf_ent)),
-    ]
-
-    # creates an x-axis position for each stability condition
-    x_pos = [i for i, _ in enumerate(x)]
-    # create bars plot with different colors for each
-    plt.bar(x_pos, ents, yerr=error, capsize=3, color="grbymc")
-    # label x axis
-    plt.xlabel(
-        "Balance Condition", fontdict={"fontsize": 11},
-    )
-    # label y axis
-    plt.ylabel(
-        "Average Approximate Entropy", fontdict={"fontsize": 11},
-    )
-    # title plot
-    plt.title(
-        f"Average ApEn of Each Balance Condition\nin AP for Subject 8",
-        fontdict={"fontsize": 11},
-    )
-    # # create x-axis ticks
-    plt.xticks(x_pos, x)
-
-    plt.style.use("ggplot")
-    plt.subplot(122)
-
-    # x axis labels
-    x = ["EOFT", "ECFT", "EODB", "EODF", "ECDB", "ECDF"]
-
-    # y axis data
-    ents = [
-        np.mean(y_eoft_ent),
-        np.mean(y_ecft_ent),
-        np.mean(y_eoftandb_ent),
-        np.mean(y_eoftandf_ent),
-        np.mean(y_ecftandb_ent),
-        np.mean(y_ecftandf_ent),
-    ]
-
-    # standard error bars
-    error = [
-        np.std(y_eoft_ent) / np.sqrt(len(y_eoft_ent)),
-        np.std(y_ecft_ent) / np.sqrt(len(y_ecft_ent)),
-        np.std(y_eoftandb_ent) / np.sqrt(len(y_eoftandb_ent)),
-        np.std(y_eoftandf_ent) / np.sqrt(len(y_eoftandf_ent)),
-        np.std(y_ecftandb_ent) / np.sqrt(len(y_ecftandb_ent)),
-        np.std(y_ecftandf_ent) / np.sqrt(len(y_ecftandf_ent)),
-    ]
-
-    # creates an x-axis position for each stability condition
-    x_pos = [i for i, _ in enumerate(x)]
-    # create bars plot with different colors for each
-    plt.bar(x_pos, ents, yerr=error, capsize=3, color="grbymc")
-    # label x axis
-    plt.xlabel(
-        "Balance Condition", fontdict={"fontsize": 11},
-    )
-    # label y axis
-    plt.ylabel(
-        "Average Approximate Entropy", fontdict={"fontsize": 11},
-    )
-    # title plot
-    plt.title(
-        f"Average ApEn of Each Balance Condition\nin ML for Subject 8",
-        fontdict={"fontsize": 11},
-    )
-    # # create x-axis ticks
-    plt.xticks(x_pos, x)
-
-    plt.show()
-
-    # create new figure to plot 2 subplots
-    plt.figure()
-
-    # style of plots
-    plt.style.use("ggplot")
-    plt.subplot(121)
-
-    # x axis labels
-    x = ["ECFT", "EODB", "EODF", "ECDB", "ECDF"]
-
-    # y axis data
-    ents = [
-        np.mean(x_ecft_ent) - np.mean(x_eoft_ent),
-        np.mean(x_eoftandb_ent) - np.mean(x_eoft_ent),
-        np.mean(x_eoftandf_ent) - np.mean(x_eoft_ent),
-        np.mean(x_ecftandb_ent) - np.mean(x_eoft_ent),
-        np.mean(x_ecftandf_ent) - np.mean(x_eoft_ent),
-    ]
-
-    # standard error bars
-    error = [
-        np.std(x_ecft_ent) / np.sqrt(len(x_ecft_ent)),
-        np.std(x_eoftandb_ent) / np.sqrt(len(x_eoftandb_ent)),
-        np.std(x_eoftandf_ent) / np.sqrt(len(x_eoftandf_ent)),
-        np.std(x_ecftandb_ent) / np.sqrt(len(x_ecftandb_ent)),
-        np.std(x_ecftandf_ent) / np.sqrt(len(x_ecftandf_ent)),
-    ]
-
-    # creates an x-axis position for each stability condition
-    x_pos = [i for i, _ in enumerate(x)]
-    # create bars plot with different colors for each
-    plt.bar(x_pos, ents, yerr=error, capsize=3, color="rbymc")
-    # label x axis
-    plt.xlabel(
-        "Balance Condition", fontdict={"fontsize": 11},
-    )
-    # label y axis
-    plt.ylabel(
-        "ApEn Difference", fontdict={"fontsize": 11},
-    )
-    # title plot
-    plt.title(
-        f"Difference in ApEn from EOFT condition\nin AP for Subject 8",
-        fontdict={"fontsize": 11},
-    )
-    # # create x-axis ticks
-    plt.xticks(x_pos, x)
-
-    plt.style.use("ggplot")
-    plt.subplot(122)
-
-    # x axis labels
-    x = ["ECFT", "EODB", "EODF", "ECDB", "ECDF"]
-
-    # y axis data
-    ents = [
-        np.mean(y_ecft_ent) - np.mean(y_eoft_ent),
-        np.mean(y_eoftandb_ent) - np.mean(y_eoft_ent),
-        np.mean(y_eoftandf_ent) - np.mean(y_eoft_ent),
-        np.mean(y_ecftandb_ent) - np.mean(y_eoft_ent),
-        np.mean(y_ecftandf_ent) - np.mean(y_eoft_ent),
-    ]
-
-    # standard error bars
-    error = [
-        np.std(y_ecft_ent) / np.sqrt(len(y_ecft_ent)),
-        np.std(y_eoftandb_ent) / np.sqrt(len(y_eoftandb_ent)),
-        np.std(y_eoftandf_ent) / np.sqrt(len(y_eoftandf_ent)),
-        np.std(y_ecftandb_ent) / np.sqrt(len(y_ecftandb_ent)),
-        np.std(y_ecftandf_ent) / np.sqrt(len(y_ecftandf_ent)),
-    ]
-
-    # creates an x-axis position for each stability condition
-    x_pos = [i for i, _ in enumerate(x)]
-    # create bars plot with different colors for each
-    plt.bar(x_pos, ents, yerr=error, capsize=3, color="rbymc")
-    # label x axis
-    plt.xlabel(
-        "Balance Condition", fontdict={"fontsize": 11},
-    )
-    # label y axis
-    plt.ylabel(
-        "ApEn Difference", fontdict={"fontsize": 11},
-    )
-    # title plot
-    plt.title(
-        f"Difference in ApEn between EOFT condition\nin ML for Subject 8",
         fontdict={"fontsize": 11},
     )
     # # create x-axis ticks

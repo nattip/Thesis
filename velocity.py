@@ -95,6 +95,15 @@ if __name__ == "__main__":
         for file in dirs[directory]:
             # Determine which trial number it is
             number = int(file[10:12])
+            subject = int(file[2:4])
+            if subject == 4:
+                subject = 3
+            elif subject == 5:
+                subject = 4
+            elif subject == 6:
+                subject = 5
+            elif subject == 8:
+                subject = 6
 
             # if an EOFT trial
             if number < 7:
@@ -344,7 +353,7 @@ if __name__ == "__main__":
         )
         # title plot
         plt.title(
-            f"Average Velocity of Each Balance Condition\nin AP for Subject {(directory[-1])}",
+            f"Average Velocity of Each Balance Condition\nin AP for Subject {subject}",
             fontdict={"fontsize": 11},
         )
 
@@ -387,7 +396,7 @@ if __name__ == "__main__":
             "Average Velocity (mm/s)", fontdict={"fontsize": 11},
         )
         plt.title(
-            f"Average Velocity of Each Balance Condition\nin ML for Subject {(directory[-1])}",
+            f"Average Velocity of Each Balance Condition\nin ML for Subject {subject}",
             fontdict={"fontsize": 11},
         )
 
@@ -427,7 +436,7 @@ if __name__ == "__main__":
             "Magnitude", fontdict={"fontsize": 11},
         )
         plt.title(
-            f"Average Total Power of Each Balance Condition\nin AP for Subject {(directory[-1])}",
+            f"Average Total Power of Each Balance Condition\nin AP for Subject {subject}",
             fontdict={"fontsize": 11},
         )
 
@@ -466,7 +475,7 @@ if __name__ == "__main__":
             "Magnitude", fontdict={"fontsize": 11},
         )
         plt.title(
-            f"Average Total Power of Each Balance Condition\nin ML for Subject {(directory[-1])}",
+            f"Average Total Power of Each Balance Condition\nin ML for Subject {subject}",
             fontdict={"fontsize": 11},
         )
 
@@ -525,7 +534,7 @@ if __name__ == "__main__":
         )
         # title plot
         plt.title(
-            f"Difference in velocity from EOFT condition\nin AP for Subject {(directory[-1])}",
+            f"Difference in velocity from EOFT condition\nin AP for Subject {subject}",
             fontdict={"fontsize": 11},
         )
 
@@ -566,7 +575,7 @@ if __name__ == "__main__":
             "Velocity Difference (mm/s)", fontdict={"fontsize": 11},
         )
         plt.title(
-            f"Difference in velocity form EOFT condition\nin ML for Subject {(directory[-1])}",
+            f"Difference in velocity form EOFT condition\nin ML for Subject {subject}",
             fontdict={"fontsize": 11},
         )
 
@@ -604,7 +613,7 @@ if __name__ == "__main__":
             "Power Difference", fontdict={"fontsize": 11},
         )
         plt.title(
-            f"Difference in total power from EOFT condition\nin AP for Subject {(directory[-1])}",
+            f"Difference in total power from EOFT condition\nin AP for Subject {subject}",
             fontdict={"fontsize": 11},
         )
 
@@ -641,7 +650,7 @@ if __name__ == "__main__":
             "Power Difference", fontdict={"fontsize": 11},
         )
         plt.title(
-            f"Difference in total power from EOFT condition\nin ML for Subject {(directory[-1])}",
+            f"Difference in total power from EOFT condition\nin ML for Subject {subject}",
             fontdict={"fontsize": 11},
         )
 

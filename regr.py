@@ -72,7 +72,7 @@ def poly(X, Y, subplt, dir):
 
     y_polynomial_predictions = model.predict(X_polynomial)
 
-    rmse = np.sqrt(mean_squared_error(Y, y_polynomial_predictions))
+    # rmse = np.sqrt(mean_squared_error(Y, y_polynomial_predictions))
     r2 = r2_score(Y, y_polynomial_predictions)
     # print(f"RMSE: {rmse}")
     # print(f"R2: {r2}")
@@ -85,7 +85,7 @@ def poly(X, Y, subplt, dir):
         X_upper.append(upper)
         X_lower.append(lower)
 
-    label = r"$r^{2}$ = " + str(round(r2, 3))
+    label = r"$R^{2}$ = " + str(round(r2, 3))
 
     plt.subplot(subplt)
     plt.plot(X, Y)
@@ -97,9 +97,10 @@ def poly(X, Y, subplt, dir):
     plt.plot(x, X_lower, color="r")
     # plt.text(25, max(Y), label, fontsize=12)
     plt.xlabel("Time (s)")
-    plt.ylabel("Signal Approximation")
+    plt.ylabel("COP Approximation (mm from starting location)")
     plt.title(f"Regression model for all trials in the {dir} direction\n{label}")
     plt.legend(["Average Signal", "Model", "95% prediction interval"])
+    plt.ylim([-10, 6])
     # plt.show()
 
     # return y_polynomial_predictions
@@ -145,8 +146,8 @@ if __name__ == "__main__":
                     Xaxis = an.butter_lowpass_filter(Xaxis, 6, fs_cop)
                     Yaxis = an.butter_lowpass_filter(Yaxis, 6, fs_cop)
 
-                # Xaxis = an.standardize(Xaxis)
-                # Yaxis = an.standardize(Yaxis)
+                Xaxis = np.subtract(Xaxis, Xaxis[0])
+                Yaxis = np.subtract(Yaxis, Yaxis[0])
 
                 all_x_data.append(Xaxis)
                 all_y_data.append(Yaxis)

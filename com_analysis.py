@@ -37,9 +37,9 @@ if __name__ == "__main__":
     )
 
     # x_cop, y_cop, x_cop_df = an.read_data_onefp(filepath, 3, ["Cx", "Cy"], 36000, [4])
-    # x_cop, y_cop = an.read_data_twofp(
-    #     filepath, 3, ["Fz", "Cx", "Cy", "Fz.1", "Cx.1", "Cy.1"], 36000, [4]
-    # )
+    x_cop, y_cop = an.read_data_twofp(
+        filepath, 3, ["Fz", "Cx", "Cy", "Fz.1", "Cx.1", "Cy.1"], 36000, [4]
+    )
 
     n_com = len(x_com)
     t_corr_com = np.arange(-n_com / fs_com, n_com / fs_com - 1 / fs_com, 1 / fs_com)
@@ -49,8 +49,8 @@ if __name__ == "__main__":
     y_com_standard = an.standardize(y_com)
     z_com_standard = an.standardize(z_com)
 
-    # x_cop_standard = an.standardize(x_cop)
-    # y_cop_standard = an.standardize(y_cop)
+    x_cop_standard = an.standardize(x_cop)
+    y_cop_standard = an.standardize(y_cop)
 
     ################### CoM X-axis analysis ####################
 
@@ -60,29 +60,29 @@ if __name__ == "__main__":
     # plt.plot(t_cop, x_cop_standard)
     # plt.title("Standardized COP and COM data in AP direction for\nECFTanDF trial")
     # plt.xlabel("Time (s)")
-    # plt.ylabel("Magnitude")
+    # plt.ylabel("Distance From Origin (mm)")
     # plt.legend(["COM", "COP"])
     # plt.subplot(122)
     # plt.plot(t_com, y_com_standard, color="r")
     # plt.plot(t_cop, y_cop_standard)
     # plt.title("Standardized COP and COM data in ML direction for\nECFTanDF trial")
     # plt.xlabel("Time (s)")
-    # plt.ylabel("Magnitude")
+    # plt.ylabel("Distance From Origin (mm)")
     # plt.legend(["COM", "COP"])
     # plt.show()
 
-    plt.figure()
-    plt.subplot(121)
-    plt.plot(t_com, x_com)
-    plt.title("Raw COM data in AP direction for\nECFTanDF trial")
-    plt.xlabel("Time (s)")
-    plt.ylabel("Magnitude")
-    plt.subplot(122)
-    plt.plot(t_com, y_com)
-    plt.title("Raw COM data in ML direction for\nECFTanDF trial")
-    plt.xlabel("Time (s)")
-    plt.ylabel("Magnitude")
-    plt.show()
+    # plt.figure()
+    # plt.subplot(121)
+    # plt.plot(t_com, x_com)
+    # plt.title("Raw COM data in AP direction for\nECFTanDF trial")
+    # plt.xlabel("Time (s)")
+    # plt.ylabel("Distance From Origin (mm)")
+    # plt.subplot(122)
+    # plt.plot(t_com, y_com)
+    # plt.title("Raw COM data in ML direction for\nECFTanDF trial")
+    # plt.xlabel("Time (s)")
+    # plt.ylabel("Distance From Origin (mm)")
+    # plt.show()
 
 #######
 # an.plot(t_com, x_com, "time (s)", "CoM", "Raw X signal", None, None)
