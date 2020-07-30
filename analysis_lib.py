@@ -18,6 +18,10 @@ from tqdm import tqdm
 from joblib import Parallel, delayed
 import multiprocessing
 from scipy import signal
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.preprocessing import PolynomialFeatures
+from scipy.stats import norm
 
 # reads CoP data in from .csv files for data with feet together, one force plate
 # returns: cx = CoP x position (AP), cy = CoP y position (ML)
@@ -156,6 +160,9 @@ def plot(x, y, xlabel, ylabel, title, xlim, ylim):
 
 
 # calculates the point by point derivative between two lists
+# Inputs:
+#   x = independent variable
+#   y = dependent variable
 def deriv(x, y):
     der = []
     for i in range(0, len(y) - 1):
@@ -164,6 +171,12 @@ def deriv(x, y):
     return der
 
 
+# adapted from https://en.wikipedia.org/wiki/Approximate_entropy
+# returns: the approximate entropy of a data set
+# User inputs:
+#   U = data set
+#   m = length of compared runs
+#   r = filter value
 def ApEn(U, m, r) -> float:
     def _maxdist(x_i, x_j):
         return max([abs(ua - va) for ua, va in zip(x_i, x_j)])
@@ -183,10 +196,20 @@ def ApEn(U, m, r) -> float:
 
 
 # collects approximate entroy into a list from each window
+# Inputs:
+#   ent_list = entrpoy value
+#   x = list to append values to
 def collect_approx_entropy(ent_list, x):
     ent_list.append(x)
 
 
+# prepares data for moving approximate entropy calculation
+# Inputs:
+#   x = data
+#   win_size = size of windows for moving calculation
+#   overlap = amount of overlap in windows
+#   mult = gain increase for data to exacerbate small differences
+#   name = data descriptor for plot laleling
 def approx_ent(x, win_size, overlap, mult, name) -> list:
     # increase magnitude of signal for more sensitivity in entropy
     x_multiplied = np.multiply(x, mult)
@@ -198,20 +221,11 @@ def approx_ent(x, win_size, overlap, mult, name) -> list:
 
     approx_entropy = []
 
-    # calculate moving approximate entropy
+    # calculate moving approximate entropy in multiple threads to speed up process
     Parallel(n_jobs=multiprocessing.cpu_count(), require="sharedmem")(
         delayed(collect_approx_entropy)(approx_entropy, (ApEn(x_overlap[row], 2, 10)))
-        # delayed(collect_approx_entropy)(approx_entropy, (ApEn(x_overlap[row], 2, 10)))
         for row in tqdm(range(0, rows))
     )
-
-    variance = []
-    for row in range(0, rows):
-        variance.append(np.var(x_overlap[row]))
-
-    # find average approximate entropy
-    # avg_entr = np.mean(approx_entropy)
-    # print(f"Average entropy for {name} = {avg_entr}")
 
     # entropy_windows = np.arange(0, rows)
 
@@ -238,13 +252,108 @@ def approx_ent(x, win_size, overlap, mult, name) -> list:
     return approx_entropy
 
 
+# function to obtain filter coefficients for butterworth, 4th order, 6 hz lowpass
+# Inputs:
+#   cutoff = cutoff frequency
+#   fs = sampling frequency of data to be filtered
+#   order = order of filter
+# Outputs:
+#   a,b = filter coefficients
 def butter_lowpass(cutoff, fs, order=4):
     normal_cutoff = float(cutoff) / (fs / 2)
     b, a = signal.butter(order, normal_cutoff, btype="lowpass", analog=False)
     return b, a
 
 
+# filters data using filter coefficients from butter_lowpass
+# Inputs:
+#   data = data to be filtered
+#   cutoff_freq = lowpass cutoff frequency
+#   fs = sampling frequency of data passed
+#   order = order of filter
+# Output:
+#   y = filtered data
 def butter_lowpass_filter(data, cutoff_freq, fs, order=4):
     b, a = butter_lowpass(cutoff_freq, fs, order=order)
     y = signal.filtfilt(b, a, data)
     return y
+
+
+# https://github.com/NathanMaton/prediction_intervals/blob/master/sklearn_prediction_interval_extension.ipynb
+# returns a prediction interval for a linear regression prediction
+# Inputs:
+#   prediction = single prediction
+#   y_test = test data that is being used for the regression
+#   test_predictions = entire list of regression predictions
+#   pi = confidence intervale
+# Outputs:
+#   lower = a single value of the lower bound
+#   upper = a single value of the upper bound
+def get_prediction_interval(prediction, y_test, test_predictions, pi=0.95):
+    # get standard deviation of y_test
+    sum_errs = np.sum((y_test - test_predictions) ** 2)
+    stdev = np.sqrt(1 / (len(y_test) - 2) * sum_errs)
+
+    # get interval from standard deviation
+    one_minus_pi = 1 - pi
+    ppf_lookup = 1 - (one_minus_pi / 2)
+    z_score = norm.ppf(ppf_lookup)
+    interval = z_score * stdev
+
+    # generate prediction interval lower and upper bound
+    lower, upper = prediction - interval, prediction + interval
+
+    return lower, upper
+
+
+# calculates the regression and plots the curve with original
+# signal and 95% prediction intervals
+# Inputs:
+#   X = x-axis data for regression
+#   Y = y-axis data for regression
+#   subplt = which subplot to plot for plotting both directions
+#   dir = direction (AP/ML) of current data
+# Outputs:
+#   subplot of regression analysis
+def poly(X, Y, subplt, dir):
+    # determine polynomial peatures
+    polynomial_features = PolynomialFeatures(degree=9)
+    X_polynomial = polynomial_features.fit_transform(X)
+
+    # create regression model and fit to the polynomial features
+    model = LinearRegression()
+    model.fit(X_polynomial, Y)
+
+    # create a regression curve based on model
+    y_polynomial_predictions = model.predict(X_polynomial)
+
+    # calculte r squared value
+    r2 = r2_score(Y, y_polynomial_predictions)
+
+    # create upper and lower intervals
+    X_upper = []
+    X_lower = []
+
+    # calculate upper and lower intervals
+    for prediction in y_polynomial_predictions:
+        lower, upper = get_prediction_interval(prediction, Y, y_polynomial_predictions)
+        X_upper.append(upper)
+        X_lower.append(lower)
+
+    # create a label to show the r squared value on plot
+    label = r"$R^{2}$ = " + str(round(r2, 3))
+
+    # plot the original signal, regression curve, and prediction intervals
+    plt.subplot(subplt)
+    plt.plot(X, Y)
+    sort_axis = operator.itemgetter(0)
+    sorted_zip = sorted(zip(X, y_polynomial_predictions), key=sort_axis)
+    x, y_polynomial_predictions = zip(*sorted_zip)
+    plt.plot(x, y_polynomial_predictions, color="m")
+    plt.plot(x, X_upper, color="r")
+    plt.plot(x, X_lower, color="r")
+    plt.xlabel("Time (s)")
+    plt.ylabel("COP Approximation (mm from starting location)")
+    plt.title(f"Regression model for all trials in the {dir} direction\n{label}")
+    plt.legend(["Average Signal", "Model", "95% prediction interval"])
+    plt.ylim([-10, 6])
