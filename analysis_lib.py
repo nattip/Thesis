@@ -6,7 +6,7 @@
 # Description: Library of functions for use in
 #   code relating to thesis research
 #
-# Last updated: May 13, 2020
+# Last updated: July 29, 2020
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -245,7 +245,6 @@ def butter_lowpass(cutoff, fs, order=4):
 
 
 def butter_lowpass_filter(data, cutoff_freq, fs, order=4):
-    # Source: https://github.com/guillaume-chevalier/filtering-stft-and-laplace-transform
     b, a = butter_lowpass(cutoff_freq, fs, order=order)
     y = signal.filtfilt(b, a, data)
     return y

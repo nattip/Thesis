@@ -7,7 +7,9 @@
 #   containing Approximate entropy results
 #   for all files in x and y directions
 #
-# Last updated: July 3, 2020
+# Last updated: July 29, 2020
+
+#####################################################################################
 
 # import packages
 import matplotlib.pyplot as plt
@@ -36,6 +38,7 @@ sb04_y = {}
 sb05_y = {}
 sb06_y = {}
 sb08_y = {}
+
 #####################################################################################
 
 if __name__ == "__main__":
@@ -149,12 +152,15 @@ if __name__ == "__main__":
             x_trial_ent.append(np.mean(sb01_x[trial]))
             y_trial_ent.append(np.mean(sb01_y[trial]))
 
+    # save x and y entropies by trial and condition to a .csv file
     zipped = list(zip(x_trial_ent, y_trial_ent, trial_cond))
     df_for_stats = pd.DataFrame(zipped, columns=["xEntropy", "yEntropy", "condition"])
     df_for_stats.to_csv(f"sb1_entropy_by_condition.csv")
 
+    # create windows to plot moving entropy against
     windows = np.arange(0, 39, 1)
 
+    # plot entropy
     plt.figure()
     plt.subplot(121)
     plt.plot(windows, sb01_x[27])

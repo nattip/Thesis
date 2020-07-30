@@ -7,21 +7,13 @@
 #   and COP to obtain auto and cross
 #   correlation for comparison.
 #
-# Last updated: July 5, 2020
+# Last updated: July 29, 2020
 
 # import packages
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import pandas as pd
-from sklearn import preprocessing
-import skimage
-from tqdm import tqdm
-from joblib import Parallel, delayed
-import multiprocessing
 import analysis_lib as an
-import os
-from scipy.stats import ttest_ind, ttest_ind_from_stats
 from scipy.stats import pearsonr
 
 # constants
@@ -34,12 +26,15 @@ t_cop = np.arange(0, 30, 1 / fs_cop)
 
 if __name__ == "__main__":
 
+    # read in COP data
     x_cop = pd.read_csv("x_cop.csv", index_col=False)
     y_cop = pd.read_csv("y_cop.csv", index_col=False)
 
+    # read in COM data
     x_com = pd.read_csv("x_com.csv", index_col=False)
     y_com = pd.read_csv("y_com.csv", index_col=False)
 
+    # create dictionaries and lists for x-axis data
     corr_dict = {}
     eoft = []
     ecft = []
@@ -52,6 +47,7 @@ if __name__ == "__main__":
     for col in x_cop.columns:
         # determine the subject and trial number for column
 
+        # determine subject and trial number of current data
         number = int(col[10:12])
         subject = int(col[2:4])
 
@@ -59,19 +55,25 @@ if __name__ == "__main__":
         cop_sig = x_cop[col].to_list()
         com_sig = x_com[col].to_list()
 
+        # create time vector for correlation signal
         n_com = len(com_sig)
         t_corr = np.arange(-n_com / fs_com, n_com / fs_com - 1 / fs_com, 1 / fs_com)
 
+        # resample COP data to match fs of COM
         cop_sig_resample = []
         for i in range(0, n_com):
             cop_sig_resample.append(cop_sig[i * 10])
 
+        # calculate pearson's correlation coefficient between COP and COM
         corr, _ = pearsonr(cop_sig_resample, com_sig)
+
+        # calculate autocorrelation of COP
         auto_corr = np.correlate(cop_sig_resample, cop_sig_resample, mode="full")
+
+        # calculate cross correlation between COP and COM
         cross_corr = np.correlate(cop_sig_resample, com_sig, mode="full")
 
-        t_corr = np.arange(-n_com / fs_com, n_com / fs_com - 1 / fs_com, 1 / fs_com)
-
+        # split up pearson's coefficients by condition
         if number < 7:
             eoft.append(corr)
         elif 6 < number < 12:
@@ -85,6 +87,7 @@ if __name__ == "__main__":
         elif 26 < number < 32:
             ecftandf.append(corr)
 
+        # set values to keys of each condition in dictionary for pearsons
         corr_dict["EOFT"] = eoft
         corr_dict["ECFT"] = ecft
         corr_dict["EOFTanDB"] = eoftandb
@@ -92,6 +95,7 @@ if __name__ == "__main__":
         corr_dict["EOFTanDF"] = eoftandf
         corr_dict["ECFTanDF"] = ecftandf
 
+        # plot auto and cross correlations of one EOFT trial
         if subject == 1 and number == 2:
             plt.figure()
             plt.subplot(121)
@@ -104,9 +108,11 @@ if __name__ == "__main__":
             plt.ylabel("Magnitude")
             plt.legend(["Auto", "Cross"])
 
+    # save pearson's coefficients in dataframe format to a .csv file
     corr_df = pd.DataFrame(corr_dict, columns=corr_dict.keys())
     corr_df.to_csv("x_correlations.csv")
 
+    # repeat above for the y-axis data
     corr_dict = {}
     eoft = []
     ecft = []
@@ -116,13 +122,10 @@ if __name__ == "__main__":
     ecftandf = []
 
     for col in y_cop.columns:
-        print(col)
-        # determine the subject and trial number for column
 
         number = int(col[10:12])
         subject = int(col[2:4])
 
-        # turn column of df into a list
         cop_sig = y_cop[col].to_list()
         com_sig = y_com[col].to_list()
 

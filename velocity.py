@@ -6,7 +6,9 @@
 # Description: Processing of the velocity
 #   of COP signals.
 #
-# Last updated: July 3, 2020
+# Last updated: July 29, 2020
+
+#####################################################################################
 
 # import packages
 import matplotlib.pyplot as plt
@@ -15,8 +17,8 @@ import pandas as pd
 import analysis_lib as an
 import os
 import statistics
-from scipy.stats import ttest_ind, ttest_ind_from_stats
 
+# define root folder for data
 ROOT = f"{os.environ.get('HOME')}/Code/center_of_pressure/data"
 
 # constants
@@ -27,7 +29,7 @@ t_cop = np.arange(0, 30, 1 / fs_cop)
 
 if __name__ == "__main__":
 
-    # determing all subdirectories in root directory
+    # determine all subdirectories in root directory
     folders = [x[0] for x in os.walk(ROOT)]
     # remove the root directory from folders
     folders.remove(ROOT)
@@ -48,6 +50,8 @@ if __name__ == "__main__":
     # loop through all files in all subdirectories
     for directory in dirs:
         print(directory)
+
+        # create lists to store vel and psd for x and y data
         x_trial_vel = []
         y_trial_vel = []
         x_trial_pow = []
@@ -93,9 +97,11 @@ if __name__ == "__main__":
 
         # loop through each file in the directory
         for file in dirs[directory]:
-            # Determine which trial number it is
+            # Determine which trial number and subject the file is
             number = int(file[10:12])
             subject = int(file[2:4])
+
+            # change subject number to fit plot formatting
             if subject == 4:
                 subject = 3
             elif subject == 5:
@@ -295,6 +301,7 @@ if __name__ == "__main__":
                 pow_y_tot_ecdftan.append(sum(abs(Syy_vel_cop)))
                 y_trial_pow.append(sum(abs(Syy_vel_cop)))
 
+        # save velocity data from all conditions in both directions to a .csv
         zipped = list(
             zip(x_trial_vel, y_trial_vel, x_trial_pow, y_trial_pow, trial_cond)
         )

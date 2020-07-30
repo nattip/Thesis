@@ -8,13 +8,11 @@
 #   in one .csv file for all x and another
 #   for all y
 #
-# Last updated: July 3, 2020
+# Last updated: July 29, 2020
 
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import pandas as pd
-from sklearn import preprocessing
 import skimage
 from tqdm import tqdm
 from joblib import Parallel, delayed
@@ -24,6 +22,7 @@ import os
 
 #####################################################################################
 
+# define root folder for data
 ROOT = f"{os.environ.get('HOME')}/Code/center_of_pressure/data"
 
 # constants
@@ -34,7 +33,7 @@ t_cop = np.arange(0, 30, 1 / fs_cop)
 
 if __name__ == "__main__":
 
-    # determing all subdirectories in root directory
+    # determine all subdirectories in root directory
     folders = [x[0] for x in os.walk(ROOT)]
     # remove the root directory from folders
     folders.remove(ROOT)
