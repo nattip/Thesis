@@ -1,3 +1,5 @@
+# regr.py
+#
 # Written by: Natalie Tipton
 # Advisor: Dr. Samhita Rhodes
 #
@@ -25,7 +27,7 @@ from sklearn.preprocessing import PolynomialFeatures
 from scipy.stats import norm
 
 # define root folder for data
-ROOT = "/Users/natalietipton/Code/center_of_pressure/data"
+ROOT = f"{os.environ.get('HOME')}/Code/center_of_pressure/data"
 
 # constants
 fs_cop = 1200
@@ -38,85 +40,6 @@ t_cop = np.arange(0, 30, 1 / fs_cop)
 # create lists for all data to go into
 all_x_data = []
 all_y_data = []
-
-# https://github.com/NathanMaton/prediction_intervals/blob/master/sklearn_prediction_interval_extension.ipynb
-# returns a prediction interval for a linear regression prediction
-# Inputs:
-#   prediction = single prediction
-#   y_test = test data that is being used for the regression
-#   test_predictions = entire list of regression predictions
-#   pi = confidence intervale
-# Outputs:
-#   lower = a single value of the lower bound
-#   upper = a single value of the upper bound
-def get_prediction_interval(prediction, y_test, test_predictions, pi=0.95):
-    # get standard deviation of y_test
-    sum_errs = np.sum((y_test - test_predictions) ** 2)
-    stdev = np.sqrt(1 / (len(y_test) - 2) * sum_errs)
-
-    # get interval from standard deviation
-    one_minus_pi = 1 - pi
-    ppf_lookup = 1 - (one_minus_pi / 2)
-    z_score = norm.ppf(ppf_lookup)
-    interval = z_score * stdev
-
-    # generate prediction interval lower and upper bound
-    lower, upper = prediction - interval, prediction + interval
-
-    return lower, upper
-
-
-# calculates the regression and plots the curve with original
-# signal and 95% prediction intervals
-# Inputs:
-#   X = x-axis data for regression
-#   Y = y-axis data for regression
-#   subplt = which subplot to plot for plotting both directions
-#   dir = direction (AP/ML) of current data
-# Outputs:
-#   subplot of regression analysis
-def poly(X, Y, subplt, dir):
-    # determine polynomial peatures
-    polynomial_features = PolynomialFeatures(degree=9)
-    X_polynomial = polynomial_features.fit_transform(X)
-
-    # create regression model and fit to the polynomial features
-    model = LinearRegression()
-    model.fit(X_polynomial, Y)
-
-    # create a regression curve based on model
-    y_polynomial_predictions = model.predict(X_polynomial)
-
-    # calculte r squared value
-    r2 = r2_score(Y, y_polynomial_predictions)
-
-    # create upper and lower intervals
-    X_upper = []
-    X_lower = []
-
-    # calculate upper and lower intervals
-    for prediction in y_polynomial_predictions:
-        lower, upper = get_prediction_interval(prediction, Y, y_polynomial_predictions)
-        X_upper.append(upper)
-        X_lower.append(lower)
-
-    # create a label to show the r squared value on plot
-    label = r"$R^{2}$ = " + str(round(r2, 3))
-
-    # plot the original signal, regression curve, and prediction intervals
-    plt.subplot(subplt)
-    plt.plot(X, Y)
-    sort_axis = operator.itemgetter(0)
-    sorted_zip = sorted(zip(X, y_polynomial_predictions), key=sort_axis)
-    x, y_polynomial_predictions = zip(*sorted_zip)
-    plt.plot(x, y_polynomial_predictions, color="m")
-    plt.plot(x, X_upper, color="r")
-    plt.plot(x, X_lower, color="r")
-    plt.xlabel("Time (s)")
-    plt.ylabel("COP Approximation (mm from starting location)")
-    plt.title(f"Regression model for all trials in the {dir} direction\n{label}")
-    plt.legend(["Average Signal", "Model", "95% prediction interval"])
-    plt.ylim([-10, 6])
 
 
 #####################################################################################

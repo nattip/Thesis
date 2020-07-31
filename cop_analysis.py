@@ -113,11 +113,11 @@ if __name__ == "__main__":
 #     None,
 # )
 
-# # calculate auto and cross correlations
-# auto_x_cop = np.correlate(x_cop_standard, x_cop_standard, mode="full")
-# cross_xy_cop = np.correlate(x_cop_standard, y_cop_standard, mode="full")
-# auto_vel_x_cop = np.correlate(vel_x_cop, vel_x_cop, mode="full")
-# auto_vel_y_cop = np.correlate(vel_y_cop, vel_y_cop, mode="full")
+# calculate auto and cross correlations
+auto_x_cop = np.correlate(x_cop_standard, x_cop_standard, mode="full")
+cross_xy_cop = np.correlate(x_cop_standard, y_cop_standard, mode="full")
+auto_vel_x_cop = np.correlate(vel_x_cop, vel_x_cop, mode="full")
+auto_vel_y_cop = np.correlate(vel_y_cop, vel_y_cop, mode="full")
 
 # an.plot(
 #     t_corr_cop,
@@ -140,29 +140,29 @@ if __name__ == "__main__":
 # )
 
 # # calculate autopower
-# n_auto_cop = len(auto_x_cop)
-# freq_cop = np.arange(0, fs_cop, fs_cop / n_auto_cop)
+n_auto_cop = len(auto_x_cop)
+freq_cop = np.arange(0, fs_cop, fs_cop / n_auto_cop)
 
-# Sxx_cop = np.fft.fft(auto_x_cop)
-# Sxx_vel_cop = np.fft.fft(auto_vel_x_cop)
-# Syy_vel_cop = np.fft.fft(auto_vel_y_cop)
-# print(abs(np.max(Sxx_vel_cop)))
-# print(f"Total Power of X CoP Velocity = {sum(abs(Sxx_vel_cop))}")
+Sxx_cop = np.fft.fft(auto_x_cop)
+Sxx_vel_cop = np.fft.fft(auto_vel_x_cop)
+Syy_vel_cop = np.fft.fft(auto_vel_y_cop)
+print(abs(np.max(Sxx_vel_cop)))
+print(f"Total Power of X CoP Velocity = {sum(abs(Sxx_vel_cop))}")
 
-# plt.figure()
-# plt.subplot(121)
-# plt.plot(freq_cop[:-2], abs(Sxx_vel_cop))
-# plt.title("PSD of COP Velocity in AP direction for\nECFTanDF trial")
-# plt.xlabel("Frequency (Hz)")
-# plt.ylabel("Magnitude")
-# plt.xlim([0, 10])
-# plt.subplot(122)
-# plt.plot(freq_cop[:-2], abs(Syy_vel_cop))
-# plt.title("PSD of COP Velocity in ML direction for\nECFTanDF trial")
-# plt.xlabel("Frequency (Hz)")
-# plt.ylabel("Magnitude")
-# plt.xlim([0, 10])
-# plt.show()
+plt.figure()
+plt.subplot(121)
+plt.plot(freq_cop[:-2], abs(Sxx_vel_cop))
+plt.title("PSD of COP Velocity in AP direction for\nECFTanDF trial")
+plt.xlabel("Frequency (Hz)")
+plt.ylabel("Magnitude")
+plt.xlim([0, 10])
+plt.subplot(122)
+plt.plot(freq_cop[:-2], abs(Syy_vel_cop))
+plt.title("PSD of COP Velocity in ML direction for\nECFTanDF trial")
+plt.xlabel("Frequency (Hz)")
+plt.ylabel("Magnitude")
+plt.xlim([0, 10])
+plt.show()
 
 # an.plot(
 #     freq_cop,
